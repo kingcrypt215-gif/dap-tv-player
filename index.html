@@ -13,16 +13,21 @@
     
     /* Branding fixed to top-left, transparent, travels to fullscreen */
     #category-badge {
-        position: absolute; top: 10px; left: 10px; z-index: 99999;
+        position: absolute; top: 10px; left: 10px; z-index: 2147483647;
         background: transparent !important; color: #FFD700;
         padding: 5px 10px; font-size: 14px; font-weight: bold;
         text-transform: uppercase; text-shadow: 2px 2px 4px #000;
         pointer-events: none;
     }
     
-    /* Fullscreen nav buttons inside video area */
-    .fs-nav { position: absolute; top: 10px; right: 10px; z-index: 99999; display: flex; gap: 5px; }
-    .fs-btn { background: rgba(255, 215, 0, 0.8); border: none; padding: 5px 10px; cursor: pointer; font-weight: bold; font-size: 12px; }
+    /* Fullscreen nav: Only visible when player controls are visible */
+    .fs-nav { 
+        position: absolute; bottom: 50px; left: 50%; transform: translateX(-50%); 
+        z-index: 2147483647; display: none; gap: 10px; opacity: 0; transition: opacity 0.3s; 
+    }
+    .vjs-fullscreen .fs-nav { display: flex; }
+    .vjs-user-active .fs-nav { opacity: 1; }
+    .fs-btn { background: #FFD700; color: #000; border: none; padding: 8px 16px; cursor: pointer; font-weight: bold; font-size: 14px; border-radius: 4px; }
 
     .nav-box { display: flex; justify-content: space-between; padding: 10px; }
     .nav-btn { background: #FFD700; color: #000; border: none; padding: 10px 20px; cursor: pointer; font-weight: bold; }
@@ -55,19 +60,16 @@
 
 <script src="https://vjs.zencdn.net/8.10.0/video.min.js"></script>
 <script>
-  // Initialize player with full volume support
   const player = videojs('player', {
     autoplay: true,
-    controlBar: {
-      volumePanel: { inline: false, vertical: true }
-    }
+    controlBar: { volumePanel: { inline: false, vertical: true } }
   });
 
   const display = document.getElementById('channel-display');
   const badge = document.getElementById('category-badge');
   const list = document.getElementById('ch-list');
-  
   let channelsWithCategories = [];
+  
   const channelData = [
     { type: "header", name: "D.A.P's entrepreneur & Money" },
     { name: "Entrepreneur TV", url: "https://cineverse-entrepreneurtv-entrepreneurtv-1-us.ono.wurl.tv/playlist.m3u8" },
@@ -413,14 +415,9 @@
     { name: "Jewish Life TV", url: "https://a-cdn.klowdtv.com/live3/jltv_720p/playlist.m3u8" }
   ];
 
-  // Logic to build the list and handle playback
-  let currentCategory = "";
   channelData.forEach(item => {
-      if (item.type === "header") {
-          currentCategory = item.name;
-      } else {
-          channelsWithCategories.push({ ...item, category: currentCategory });
-      }
+      if (item.type === "header") currentCategory = item.name;
+      else channelsWithCategories.push({ ...item, category: currentCategory });
   });
 
   function playChannel(index) {
@@ -441,18 +438,12 @@
 
   channelData.forEach((item, index) => {
       if (item.type === "header") {
-          const h = document.createElement('div');
-          h.className = 'section-header';
-          h.innerText = item.name;
-          list.appendChild(h);
+          const h = document.createElement('div'); h.className = 'section-header'; h.innerText = item.name; list.appendChild(h);
       } else {
-          const btn = document.createElement('button');
-          btn.className = 'btn';
+          const btn = document.createElement('button'); btn.className = 'btn';
           const flatIdx = channelsWithCategories.findIndex(c => c.name === item.name);
-          btn.id = 'channel-' + flatIdx;
-          btn.innerText = item.name;
-          btn.onclick = () => playChannel(flatIdx);
-          list.appendChild(btn);
+          btn.id = 'channel-' + flatIdx; btn.innerText = item.name;
+          btn.onclick = () => playChannel(flatIdx); list.appendChild(btn);
       }
   });
   
