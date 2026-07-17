@@ -1,38 +1,39 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0">
   <link href="https://vjs.zencdn.net/8.10.0/video-js.css" rel="stylesheet" />
   <style>
-    body { background: #000; color: #fff; font-family: sans-serif; margin: 0; }
+    body { background: #000; color: #fff; font-family: sans-serif; margin: 0; overflow-x: hidden; }
     
-    /* Branding outside the wrapper: stays on the page, not in fullscreen */
+    /* Branding: Stays on main screen, NOT in full-screen */
     #brand { text-align: center; color: #FFD700; font-size: 24px; font-weight: bold; padding: 10px; }
     #channel-display { text-align: center; color: #FFD700; background: #000; padding: 8px; font-weight: bold; font-size: 18px; border-bottom: 2px solid #FFD700; }
     
     .video-container { position: relative; width: 100%; aspect-ratio: 16/9; background: #000; overflow: hidden; }
     .video-js { width: 100% !important; height: 100% !important; }
     
-    /* Reparented: Category badge inside wrapper to travel to fullscreen */
+    /* Category Badge: Travels to full-screen */
     #category-badge {
-        position: absolute; top: 10px; left: 10px; z-index: 2147483647;
-        color: #FFD700; padding: 5px 10px; font-size: 14px; font-weight: bold;
-        text-transform: uppercase; text-shadow: 2px 2px 4px #000;
-        pointer-events: none;
+        position: absolute; top: 10px; left: 10px; z-index: 10;
+        background: rgba(0,0,0,0.5); color: #FFD700;
+        padding: 5px 10px; font-size: 14px; font-weight: bold;
+        pointer-events: none; text-transform: uppercase;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
     }
-    
-    /* Fullscreen nav: Only shown in fullscreen at the bottom */
+
+    /* Fullscreen-only Nav: Travels to full-screen, appears when active */
     .fs-nav { 
         position: absolute; bottom: 50px; left: 50%; transform: translateX(-50%); 
-        z-index: 2147483647; display: none; gap: 10px; opacity: 0; transition: opacity 0.3s; 
+        z-index: 15; display: none; gap: 10px; opacity: 0; transition: opacity 0.3s; 
     }
     .video-container:fullscreen .fs-nav { display: flex; }
     .video-container:fullscreen.vjs-user-active .fs-nav { opacity: 1; }
-    .fs-btn { background: #FFD700; color: #000; border: none; padding: 8px 16px; cursor: pointer; font-weight: bold; font-size: 14px; border-radius: 4px; }
+    .fs-btn { background: #FFD700; color: #000; border: none; padding: 8px 16px; cursor: pointer; font-weight: bold; }
 
-    /* Static bottom nav */
-    .nav-box { display: flex; justify-content: space-between; padding: 10px; }
-    .nav-btn { background: #FFD700; color: #000; border: none; padding: 10px 20px; cursor: pointer; font-weight: bold; }
+    /* Static bottom nav (main screen only) */
+    .nav-box { display: flex; justify-content: space-between; padding: 10px; gap: 5px; }
+    .nav-btn { background: #FFD700; color: #000; border: none; padding: 10px; cursor: pointer; font-weight: bold; flex: 1; }
     
     #ch-list { height: 350px; overflow-y: auto; background: #111; }
     .btn { display: block; width: 100%; padding: 12px; border: none; background: #222; color: #fff; text-align: left; cursor: pointer; border-bottom: 1px solid #444; }
@@ -51,7 +52,6 @@
       <button class="fs-btn" onclick="nav(-1)">PREV</button>
       <button class="fs-btn" onclick="nav(1)">NEXT</button>
   </div>
-  
   <video id="player" class="video-js vjs-default-skin" controls playsinline></video>
 </div>
 
@@ -69,13 +69,17 @@
     controlBar: { volumePanel: { inline: false, vertical: true } }
   });
 
-  const display = document.getElementById('channel-display');
-  const badge = document.getElementById('category-badge');
-  const list = document.getElementById('ch-list');
+  player.on('fullscreenchange', () => {
+    const wrapper = document.getElementById('video-wrapper');
+    if (player.isFullscreen()) wrapper.classList.add('vjs-fullscreen');
+    else wrapper.classList.remove('vjs-fullscreen');
+  });
+
   let channelsWithCategories = [];
+  const list = document.getElementById('ch-list');
   
   const channelData = [
-    { type: "header", name: "D.A.P's entrepreneur & Money" },
+    { type: "header", name: "D.A.P's Entrepreneur & Money" },
     { name: "Entrepreneur TV", url: "https://cineverse-entrepreneurtv-entrepreneurtv-1-us.ono.wurl.tv/playlist.m3u8" },
     { name: "My Money", url: "https://dqaj8xog66lli.cloudfront.net/v1/master/9d062541f2ff39b5c0f48b743c6411d25f62fc25/DistroTV-MuxIP-MyMoney/468.m3u8" },
     { name: "CGTN Global Biz", url: "https://amg01314-amg01314c6-distrotv-us-10220.playouts.now.amagi.tv/playlist/amg01314-cgtn-cgtnglobalbiz-distrotvus/playlist.m3u8" },
@@ -420,37 +424,41 @@
   ];
 
   channelData.forEach(item => {
-      if (item.type === "header") currentCategory = item.name;
-      else channelsWithCategories.push({ ...item, category: currentCategory });
+      if (item.type === "header") currentCat = item.name;
+      else channelsWithCategories.push({...item, category: currentCat});
   });
 
+  const player = videojs('player', { 
+    controlBar: { volumePanel: { inline: false, vertical: true }, fullscreenToggle: true } 
+  });
+  
   function playChannel(index) {
     const ch = channelsWithCategories[index];
     player.src({src: ch.url, type: 'application/x-mpegURL'});
     player.play();
-    display.innerText = ch.name;
-    badge.innerText = ch.category; 
+    document.getElementById('channel-display').innerText = ch.name;
+    document.getElementById('category-badge').innerText = ch.category; 
     document.querySelectorAll('.btn').forEach(btn => btn.classList.remove('active'));
     document.getElementById('channel-' + index)?.classList.add('active');
   }
 
   function nav(direction) {
-    let currentIdx = channelsWithCategories.findIndex(c => c.name === display.innerText);
+    let currentName = document.getElementById('channel-display').innerText;
+    let currentIdx = channelsWithCategories.findIndex(c => c.name === currentName);
     currentIdx = (currentIdx + direction + channelsWithCategories.length) % channelsWithCategories.length;
     playChannel(currentIdx);
   }
 
   channelData.forEach((item, index) => {
-      if (item.type === "header") {
-          const h = document.createElement('div'); h.className = 'section-header'; h.innerText = item.name; list.appendChild(h);
-      } else {
-          const btn = document.createElement('button'); btn.className = 'btn';
-          const flatIdx = channelsWithCategories.findIndex(c => c.name === item.name);
-          btn.id = 'channel-' + flatIdx; btn.innerText = item.name;
-          btn.onclick = () => playChannel(flatIdx); list.appendChild(btn);
-      }
+    if (item.type === "header") {
+        const h = document.createElement('div'); h.className = 'section-header'; h.innerText = item.name; list.appendChild(h);
+    } else {
+        const btn = document.createElement('button'); btn.className = 'btn';
+        const flatIdx = channelsWithCategories.findIndex(c => c.name === item.name);
+        btn.id = 'channel-' + flatIdx; btn.innerText = item.name;
+        btn.onclick = () => playChannel(flatIdx); list.appendChild(btn);
+    }
   });
-  
   playChannel(0);
 </script>
 </body>
