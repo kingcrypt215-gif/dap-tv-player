@@ -11,10 +11,10 @@
     .video-container { position: relative; width: 100%; aspect-ratio: 16/9; }
     .video-js { width: 100% !important; height: 100% !important; }
     
-    /* This badge is now inside .video-container and will travel to full-screen */
+    /* Category Branding: Placed in top left, transparent, follows video to fullscreen */
     #category-badge {
         position: absolute; top: 10px; left: 10px; z-index: 10;
-        background: rgba(0,0,0,0.5); color: #FFD700;
+        background: transparent; color: #FFD700;
         padding: 5px 10px; font-size: 12px; font-weight: bold;
         border: none; pointer-events: none;
         text-transform: uppercase;
@@ -35,7 +35,6 @@
 <div id="brand">D.A.P TV LIVE</div>
 <div id="channel-display">Select a Channel</div>
 <div class="video-container">
-  <!-- Badge moved inside the container to follow video into full-screen -->
   <div id="category-badge">Category</div>
   <video id="player" class="video-js vjs-default-skin" controls playsinline></video>
 </div>
@@ -51,7 +50,7 @@
 <script>
   let channelsWithCategories = [];
   const channelData = [
-    { type: "header", name: "D.A.P's Entrepreneur & Money" },
+    { type: "header", name: "D.A.P's entrepreneur & Money" },
     { name: "Entrepreneur TV", url: "https://cineverse-entrepreneurtv-entrepreneurtv-1-us.ono.wurl.tv/playlist.m3u8" },
     { name: "My Money", url: "https://dqaj8xog66lli.cloudfront.net/v1/master/9d062541f2ff39b5c0f48b743c6411d25f62fc25/DistroTV-MuxIP-MyMoney/468.m3u8" },
     { name: "CGTN Global Biz", url: "https://amg01314-amg01314c6-distrotv-us-10220.playouts.now.amagi.tv/playlist/amg01314-cgtn-cgtnglobalbiz-distrotvus/playlist.m3u8" },
@@ -395,13 +394,13 @@
     { name: "Jewish Life TV", url: "https://a-cdn.klowdtv.com/live3/jltv_720p/playlist.m3u8" }
   ];
 
+  const player = videojs('player', { controlBar: { fullscreenToggle: true } });
+
   channelData.forEach(item => {
       if (item.type === "header") currentCat = item.name;
       else channelsWithCategories.push({...item, category: currentCat});
   });
 
-  const player = videojs('player', { controlBar: { fullscreenToggle: true } });
-  
   function playChannel(index) {
     const ch = channelsWithCategories[index];
     player.src({src: ch.url, type: 'application/x-mpegURL'});
