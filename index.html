@@ -64,9 +64,9 @@
 
 <script src="https://vjs.zencdn.net/8.10.0/video.min.js"></script>
 <script>
-  const player = videojs('player', {
+  const player = videojs('player', { 
     autoplay: true,
-    controlBar: { volumePanel: { inline: false, vertical: true } }
+    controlBar: { volumePanel: { inline: false, vertical: true }, fullscreenToggle: true } 
   });
 
   player.on('fullscreenchange', () => {
@@ -76,7 +76,6 @@
   });
 
   let channelsWithCategories = [];
-  const list = document.getElementById('ch-list');
   
   const channelData = [
     { type: "header", name: "D.A.P's Entrepreneur & Money" },
@@ -428,10 +427,6 @@
       else channelsWithCategories.push({...item, category: currentCat});
   });
 
-  const player = videojs('player', { 
-    controlBar: { volumePanel: { inline: false, vertical: true }, fullscreenToggle: true } 
-  });
-  
   function playChannel(index) {
     const ch = channelsWithCategories[index];
     player.src({src: ch.url, type: 'application/x-mpegURL'});
@@ -449,17 +444,20 @@
     playChannel(currentIdx);
   }
 
-  channelData.forEach((item, index) => {
-    if (item.type === "header") {
-        const h = document.createElement('div'); h.className = 'section-header'; h.innerText = item.name; list.appendChild(h);
-    } else {
-        const btn = document.createElement('button'); btn.className = 'btn';
-        const flatIdx = channelsWithCategories.findIndex(c => c.name === item.name);
-        btn.id = 'channel-' + flatIdx; btn.innerText = item.name;
-        btn.onclick = () => playChannel(flatIdx); list.appendChild(btn);
-    }
+  document.addEventListener('DOMContentLoaded', () => {
+    const list = document.getElementById('ch-list');
+    channelData.forEach((item, index) => {
+      if (item.type === "header") {
+          const h = document.createElement('div'); h.className = 'section-header'; h.innerText = item.name; list.appendChild(h);
+      } else {
+          const btn = document.createElement('button'); btn.className = 'btn';
+          const flatIdx = channelsWithCategories.findIndex(c => c.name === item.name);
+          btn.id = 'channel-' + flatIdx; btn.innerText = item.name;
+          btn.onclick = () => playChannel(flatIdx); list.appendChild(btn);
+      }
+    });
+    playChannel(0);
   });
-  playChannel(0);
 </script>
 </body>
 </html>
