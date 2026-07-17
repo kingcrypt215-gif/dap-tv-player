@@ -1,3 +1,445 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <link href="https://vjs.zencdn.net/8.10.0/video-js.css" rel="stylesheet" />
+  <style>
+    body { background: #000; color: #fff; font-family: sans-serif; margin: 0; }
+    #brand { text-align: center; color: #FFD700; font-size: 24px; font-weight: bold; padding: 10px; }
+    #channel-display { text-align: center; color: #FFD700; background: #000; padding: 8px; font-weight: bold; font-size: 18px; border-bottom: 2px solid #FFD700; }
+    
+    .video-container { position: relative; width: 100%; aspect-ratio: 16/9; }
+    .video-js { width: 100% !important; height: 100% !important; }
+    
+    /* Minimalist Transparent Branding */
+    #category-badge {
+        position: absolute; top: 10px; left: 10px; z-index: 10;
+        background: transparent; color: #FFD700;
+        padding: 5px 10px; font-size: 12px; font-weight: bold;
+        border: none; pointer-events: none;
+        text-transform: uppercase;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+    }
+
+    .nav-box { display: flex; justify-content: space-between; padding: 10px; }
+    .nav-btn { background: #FFD700; color: #000; border: none; padding: 10px 20px; cursor: pointer; font-weight: bold; }
+    #ch-list { height: 350px; overflow-y: auto; background: #111; }
+    .btn { display: block; width: 100%; padding: 12px; border: none; background: #222; color: #fff; text-align: left; cursor: pointer; border-bottom: 1px solid #444; }
+    .btn.active { background: #FFD700 !important; color: #000 !important; font-weight: bold; }
+    .btn:hover { background: #333; }
+    .section-header { background: #000; color: #FFD700; padding: 10px; font-size: 14px; font-weight: bold; text-transform: uppercase; border-bottom: 2px solid #FFD700; border-top: 2px solid #FFD700; }
+  </style>
+</head>
+<body>
+
+<div id="brand">D.A.P TV LIVE</div>
+<div id="channel-display">Select a Channel</div>
+<div class="video-container">
+  <div id="category-badge">Category</div>
+  <video id="player" class="video-js vjs-default-skin" controls playsinline></video>
+</div>
+
+<div class="nav-box">
+  <button class="nav-btn" onclick="nav(-1)">PREVIOUS</button>
+  <button class="nav-btn" onclick="nav(1)">NEXT</button>
+</div>
+
+<div id="ch-list"></div>
+
+<script src="https://vjs.zencdn.net/8.10.0/video.min.js"></script>
+<script>
+  let channelsWithCategories = [];
+  
+  const channelData = [
+    { type: "header", name: "D.A.P's entrepreneur & Money" },
+    { name: "Entrepreneur TV", url: "https://cineverse-entrepreneurtv-entrepreneurtv-1-us.ono.wurl.tv/playlist.m3u8" },
+    { name: "My Money", url: "https://dqaj8xog66lli.cloudfront.net/v1/master/9d062541f2ff39b5c0f48b743c6411d25f62fc25/DistroTV-MuxIP-MyMoney/468.m3u8" },
+    { name: "CGTN Global Biz", url: "https://amg01314-amg01314c6-distrotv-us-10220.playouts.now.amagi.tv/playlist/amg01314-cgtn-cgtnglobalbiz-distrotvus/playlist.m3u8" },
+    { name: "DeFiance Media", url: "https://amg01529-defiancetv-defiancemedia-glewed-tre8x.amagi.tv/playlist.m3u8" },
+    { name: "Valuetainment", url: "https://a-cdn.klowdtv.com/live3/valuetainment_720p/playlist.m3u8" },
+    { name: "Yahoo Finance", url: "https://yahoo-plex.amagi.tv/playlist.m3u8" },
+
+    { type: "header", name: "D.A.P's Movies & Entertainment" },
+    { name: "Life Minute", url: "https://amg01468-lifeminutetv-lifeminute-klowdtv-r4hhz.amagi.tv/playlist/amg01468-lifeminutetv-lifeminute-klowdtv/playlist.m3u8" },
+    { name: "Young Hollywood", url: "https://amg00143-younghollywoodfast-amg00143c1-cineverse-us-946.playouts.now.amagi.tv/playlist/amg00143-younghollywoodfast-younghollywood-cineverseus/playlist.m3u8" },
+    { name: "24 Hour Free Movies", url: "https://d1b5mlajbmvkjv.cloudfront.net/v1/master/9d062541f2ff39b5c0f48b743c6411d25f62fc25/UDU-DistroTV/145.m3u8" },
+    { name: "Dove Channel", url: "https://linear-896.frequency.stream/dist/cineverse/896/hls/master/playlist.m3u8" },
+    { name: "The Film Detective", url: "https://cinedigm-entertainment-corp-thefilmdetective-1-us.ono.wurl.tv/playlist.m3u8" },
+    { name: "Midnight Pulp", url: "https://linear-897.frequency.stream/dist/cineverse/897/hls/master/playlist.m3u8" },
+    { name: "Ace TV", url: "https://c.streamhoster.com/link/hls/W5s3fS/inLo5pcsHjo/iqg9wps0m1x_5/playlist.m3u8" },
+    { name: "Circle", url: "https://amg00432-circletvfast-amg00432c1-cineverse-us-1112.playouts.now.amagi.tv/playlist/amg00432-circletv-circletv-cineverseus/playlist.m3u8" },
+    { name: "Circle (Opt 2)", url: "https://circle-samsung.amagi.tv/playlist.m3u8" },
+    { name: "Circle (Opt 3)", url: "https://circle-samsung.amagi.tv/playlist.m3u8" },
+    { name: "Great Entertainment", url: "https://a-cdn.klowdtv.com/live2/greattv_720p/playlist.m3u8" },
+    { name: "Beyond Paranormal", url: "https://a-cdn.klowdtv.com/live3/beyondparanormal_720p/playlist.m3u8" },
+    { name: "StashTV Black Stories", url: "https://amg01720-amg01720c1-klowdtv-us-4664.playouts.now.amagi.tv/playlist/amg01720-filmhub-stashtvblackstories-klowdtvus/playlist.m3u8" },
+    { name: "StashTV The Classics", url: "https://amg01720-amg01720c2-klowdtv-us-4689.playouts.now.amagi.tv/playlist/amg01720-filmhub-stashtvtheclassics-klowdtvus/playlist.m3u8" },
+    { name: "Brat TV", url: "https://amg00350-amg00350c1-klowdtv-us-2536.playouts.now.amagi.tv/playlist/amg00350-bratstudiofast-brat-klowdtvus/playlist.m3u8" },
+    { name: "All Reality We TV", url: "https://pb-6pmy4e08w6rny.akamaized.net/playlist.m3u8" },
+    { name: "AFV", url: "https://linear-12.frequency.stream/dist/plex/12/hls/master/playlist.m3u8" },
+    { name: "Midsomer Murders", url: "https://all3media-midsomer-1-us.roku.wurl.tv/playlist.m3u8" },
+    { name: "Baywatch", url: "https://amg00145-buzzr-bigballs-baywatch-rokuus-qq7iy.amagi.tv/playlist/amg00145-buzzr-bigballs-baywatch-rokuus/playlist.m3u8" },
+    { name: "21 Jump Street", url: "https://d1oefjzrirx6fc.cloudfront.net/21_Jump_Street_SONO6.m3u8" },
+    { name: "Doctor Who Classic", url: "https://bbc-classicdrwho-1-us.roku.wurl.tv/playlist.m3u8" },
+    { name: "Cinevault 80s (Opt 1)", url: "https://gsn-cinevault-80s-2-us.roku.wurl.tv/playlist.m3u8" },
+    { name: "Cinevault 80s (Opt 2)", url: "https://gsn-cinevault-80s-2-us.roku.wurl.tv/playlist.m3u8" },
+    { name: "Cinevault Classics", url: "https://gsn-cinevault-classics-1-us.roku.wurl.tv/playlist.m3u8" },
+    { name: "Cinevault 70s", url: "https://gsn-cinevault-70s-2-us.roku.wurl.tv/playlist.m3u8" },
+    { name: "Cinevault Westerns (Opt 1)", url: "https://gsn-cinevault-westerns-2-us.roku.wurl.tv/playlist.m3u8" },
+    { name: "Cinevault Westerns (Opt 2)", url: "https://gsn-cinevault-westerns-2-us.roku.wurl.tv/playlist.m3u8" },
+    { name: "Cinevault Murder and Mayhem", url: "https://gsn-cinevault-70s-2-us.roku.wurl.tv/playlist.m3u8" },
+    { name: "AMC en Español", url: "https://pb-fmbyorn1d0n1n.akamaized.net/v1/amc_amcespanol_3/samsungheadend_us/latest/main/hls/playlist.m3u8" },
+    { name: "The Walking Dead Universe", url: "https://pb-7ien6yaxy2am1.akamaized.net/playlist.m3u8" },
+    { name: "Gravitas Movies", url: "https://d6dg3ebeih71x.cloudfront.net/Gravitas_Movies.m3u8" },
+    { name: "Grjngo", url: "https://pb-rtme7tnh9wa6k.akamaized.net/playlist.m3u8" },
+    { name: "Hallmark Movies & More", url: "https://pb-clwlfvkqpn19r.akamaized.net/Hallmark_Movies_&_More.m3u8" },
+    { name: "Lifetime Movie Favorites", url: "https://pb-137agpk5fqieb.akamaized.net/v1/aenetworks_holidaymoviefavorites_1/samsungheadend_us/latest/main/hls/playlist.m3u8" },
+    { name: "Lifetime Movies Love & Drama", url: "https://d1s7megtamek6r.cloudfront.net/Lifetime_Love_and_Drama.m3u8" },
+    { name: "Miramax Channel", url: "https://pb-w5d3w3kisxahy.akamaized.net/playlist.m3u8" },
+    { name: "MovieSphere", url: "https://pb-wmei1j77c66s0.akamaized.net/MovieSphere.m3u8" },
+    { name: "The Asylum", url: "https://d1i3g4v4xlfhad.cloudfront.net/The_Asylum.m3u8" },
+    { name: "Western Bound", url: "https://pb-idvkhrn30b0jf.akamaized.net/cw.m3u8" },
+    { name: "Wild West TV", url: "https://pb-7m2kwpwgu3dqf.akamaized.net/playlist.m3u8" },
+    { name: "Overtime", url: "https://d1a8aq6t30gkqj.cloudfront.net/v1/amc_overtime_1/samsungheadend_us/latest/main/hls/playlist_hd.m3u8" },
+
+    { type: "header", name: "D.A.P Is Culture & World" },
+    { name: "Black Enterprise", url: "https://a-cdn.klowdtv.com/live3/blackenterprise_720p/playlist.m3u8" },
+    { name: "Absolute Reality", url: "https://amc-absolutereality-1-us.plex.wurl.tv/playlist.m3u8" },
+    { name: "Maverick Black Cinema", url: "https://maverick-maverick-black-cinema-3-us.roku.wurl.tv/playlist.m3u8" },
+    { name: "Maverick Black Cinema (720p)", url: "https://maverick-maverick-black-cinema-1-us.samsung.wurl.tv/playlist.m3u8" },
+    { name: "ALLBLK Gems", url: "https://df1zke3zj042m.cloudfront.net/playlist.m3u8" },
+    { name: "Ebony TV by Lionsgate (1080p)", url: "https://pb-6csswagmy4nat.akamaized.net/Ebony_TV_by_Lionsgate.m3u8" },
+    { name: "Shades of Black (1080p)", url: "https://pb-mn2nw2xfj5wcy.akamaized.net/Shades_of_Black.m3u8" },
+    { name: "AfroLandTV", url: "https://alt-al.otteravision.com/alt/al/al.m3u8" },
+    { name: "Nolly Africa", url: "https://amg02784-nollyafricafast-amg02784c1-cineverse-us-1124.playouts.now.amagi.tv/playlist/amg02784-nollyafricafast-nollyafricahd-cineverseus/playlist.m3u8" },
+    { name: "Nolly Africa HD", url: "https://amg02784-amg02784c1-distrotv-latam-5650.playouts.now.amagi.tv/playlist/amg02784-nollyafricafast-nollyafricahd-distrotvlatam/playlist.m3u8" },
+    { name: "Hi-YAH!", url: "https://linear-59.frequency.stream/dist/plex/59/hls/master/playlist.m3u8" },
+    { name: "AsianCrush", url: "https://linear-900.frequency.stream/dist/cineverse/900/hls/master/playlist.m3u8" },
+    { name: "Coreano by CJ ENM (1080p)", url: "https://d32e935uzaanj4.cloudfront.net/e66911c8_a9c5_4206_979f_1ad694dcb8ad/hls/playlist.m3u8" },
+    { name: "Genie K Drama (1080p)", url: "https://ads.its-newid.net/api/manifest.m3u8?ads.service_id=US2000012KX&channel_id=newid_351&tp=samsung_tvplus" },
+    { name: "Genie K Movie (1080p)", url: "https://ads.its-newid.net/api/manifest.m3u8?ads.service_id=US200001137&channel_id=newid_350&tp=samsung_tvplus" },
+    { name: "K Drama by CJ ENM (1080p)", url: "https://d2fdocl6hmu0hh.cloudfront.net/dfa54c7d_1154_425d_a2b8_6ea994157976/hls/playlist.m3u8" },
+    { name: "K Drama+ (1080p)", url: "https://ads.its-newid.net/api/manifest.m3u8?ads.service_id=US1700017NM&channel_id=newid_271&tp=samsung_tvplus" },
+    { name: "K Food by CJ ENM (1080p)", url: "https://dmxcualdgbo80.cloudfront.net/b2c874a8_68b3_49cb_9435_0264a4d32e4a/hls/playlist.m3u8" },
+    { name: "K Stories by CJ ENM (1080p)", url: "https://d50a1g0nh14ou.cloudfront.net/e91c6419_2e45_4f6c_a646_b912658d73b8/hls/playlist.m3u8" },
+    { name: "NEW KMOVIES (1080p)", url: "https://ads.its-newid.net/api/manifest.m3u8?ads.service_id=USAJ30000122O&channel_id=newid_342&tp=samsung_tvplus" },
+    { name: "Series K Edge (1080p)", url: "https://d3mznj2vub522l.cloudfront.net/playlist.m3u8" },
+    { name: "Series K Heart (1080p)", url: "https://d28efmnqar6ea8.cloudfront.net/playlist.m3u8" },
+    { name: "Series K Legacy (1080p)", url: "https://d2uvezlpjwbhrx.cloudfront.net/playlist.m3u8" },
+    { name: "6 Wise Tv", url: "https://live.enhdtv.com:8081/8150/index.m3u8" },
+    { name: "LATV", url: "https://amg00779-latv-amg00779c1-cineverse-us-1746.playouts.now.amagi.tv/playlist/amg00779-latvnetworkllc-latv-cineverseus/playlist.m3u8" },
+    { name: "Estrella TV (Opt 1)", url: "https://cdn-uw2-prod.tsv2.amagi.tv/linear/amg00567-estrellamedia-estrellatv-distrotv/playlist.m3u8" },
+    { name: "Estrella TV (Opt 2)", url: "https://estrellanews-plex.amagi.tv/playlist.m3u8" },
+    { name: "Estrella TV (1080p)", url: "https://d1accqs1infy2u.cloudfront.net/EstrellaTV.m3u8" },
+    { name: "FreeTV Estelar", url: "https://d38sud5af047z8.cloudfront.net/ftveu.m3u8" },
+    { name: "RCN Más", url: "https://rcntv-rcnmas-1-us.plex.wurl.tv/playlist.m3u8" },
+    { name: "Cine en Espanol", url: "https://amg02724-somos-amg02724c1-klowdtv-us-2002.playouts.now.amagi.tv/playlist/amg02724-somosfast-cineenespanol-klowdtvus/playlist.m3u8" },
+    { name: "Cine Romantico", url: "https://d1si3n1st4nkgb.cloudfront.net/10502/88886011/hls/master.m3u8?ads.xumo_channelId=88886011" },
+    { name: "Cine Sony", url: "https://a-cdn.klowdtv.com/live1/cine_720p/playlist.m3u8" },
+    { name: "Canela.TV (1080p)", url: "https://d3cx6yargdnl7q.cloudfront.net/canelatv.m3u8" },
+    { name: "Novelas Turcas (1080p)", url: "https://d3p1t3yzbr6q5d.cloudfront.net/Novelas_Turcas.m3u8" },
+    { name: "Qué Culpa Tiene Fatmagül (1080p)", url: "https://d1lnbiqw2cduwy.cloudfront.net/que_culpa_tiene_fatmagul.m3u8" },
+    { name: "WAPA+ (1080p)", url: "https://d15svg0m77868y.cloudfront.net/v1/hemisphere_wapaplus_1/samsungheadend_us/latest/main/hls/playlist.m3u8" },
+    { name: "Runtime Espanol", url: "https://run-rt-uh-roku.otteravision.com/run/rt_uh/rt_uh.m3u8" },
+    { name: "Cirque du Soleil", url: "https://amg01439-amg01439c1-amgplt0081.playout.now3.amagi.tv/playlist/amg01439-amg01439c1-amgplt0081/playlist.m3u8" },
+
+    { type: "header", name: "D.A.P's LGBTQ Zone" },
+    { name: "Revry Queer (Opt 1)", url: "https://linear-43.frequency.stream/dist/galxy/43/hls/master/playlist.m3u8" },
+    { name: "Revry Queer (Opt 2)", url: "https://linear-43.frequency.stream/mt/galxy/43/hls/master/playlist.m3u8" },
+    { name: "Revry (1080p)", url: "https://d36jpyyja698yd.cloudfront.net/playlist.m3u8" },
+    { name: "Revry (Option 2)", url: "https://d36jpyyja698yd.cloudfront.net/playlist.m3u8" },
+    { name: "OUTflix Movies (1080p)", url: "https://dg37ei3o66x3s.cloudfront.net/OutTV_US.m3u8" },
+
+    { type: "header", name: "D.A.P's Anime House" },
+    { name: "ANIME x HIDIVE (720p)", url: "https://d3f088nnrrvkwf.cloudfront.net/v1/amc_anime_x_hidive_1/samsungheadend_us/latest/main/hls/playlist.m3u8" },
+    { name: "Animation+ (1080p)", url: "https://pb-ioe9d0fpkd6pp.akamaized.net/playlist.m3u8" },
+    { name: "FilmRise Anime (720p)", url: "https://dvu7aia8rjlfm.cloudfront.net/master.m3u8" },
+    { name: "It’s Anime (1080p)", url: "https://d1isoijd9dbbf7.cloudfront.net/playlist.m3u8" },
+    { name: "RetroCrush (1080p)", url: "https://d2nqmwm1ndpgi2.cloudfront.net/playlist.m3u8" },
+    { name: "Hunter x Hunter (1080p)", url: "https://d190au8yjmla79.cloudfront.net/playlist.m3u8" },
+    { name: "JoJo's Bizarre Adventure (1080p)", url: "https://d2kqaqstkr42e1.cloudfront.net/playlist.m3u8" },
+    { name: "Naruto (1080p)", url: "https://d21vn5eki5qsdi.cloudfront.net/playlist.m3u8" },
+
+    { type: "header", name: "D.A.P's Toon Town" },
+    { name: "Kartoon Channel! (720p)", url: "https://d2z0ysa6dgxhlc.cloudfront.net/kchan.m3u8" },
+    { name: "Mr. Bean Animated (1080p)", url: "https://d2t1w90tnft92.cloudfront.net/Mr_Bean_Animated.m3u8" },
+    { name: "Rainbow Ruby (720p)", url: "https://dt9mwqwe98q7o.cloudfront.net/master.m3u8" },
+    { name: "Rev and Roll (720p)", url: "https://d39nqr4d4h6cv6.cloudfront.net/master.m3u8" },
+    { name: "Slugterra (720p)", url: "https://d19m5s4kmtxvps.cloudfront.net/master.m3u8" },
+    { name: "Sonic The Hedgehog (720p)", url: "https://dtwdcugadwtnw.cloudfront.net/master.m3u8" },
+    { name: "Strawberry Shortcake (720p)", url: "https://d2tdny619yw5x1.cloudfront.net/master.m3u8" },
+
+    { type: "header", name: "D.A.P's Family Time" },
+    { name: "Spark TV Luz", url: "https://candlelightmedia-sparklightlove-4-us.roku.wurl.tv/playlist.m3u8" },
+    { name: "Spark TV Amor", url: "https://candlelightmedia-sparklightlove-6-us.roku.wurl.tv/playlist.m3u8" },
+    { name: "PBS Kids Alaska", url: "https://livestream.pbskids.org/out/v1/94b88ad58fc14f84a9382341f1c00b82/akst.m3u8" },
+    { name: "PBS Kids Eastern/Central", url: "https://2-fss-2.streamhoster.com/pl_140/amlst:200914-1298290/playlist.m3u8" },
+    { name: "PBS Kids Mountain", url: "https://livestream.pbskids.org/out/v1/3fe3030a2c8045a3932f4289d9eba3e6/mst.m3u8" },
+    { name: "PBS Kids Pacific", url: "https://livestream.pbskids.org/out/v1/11f2e6b73eaa4887b3746cb863960e79/pst.m3u8" },
+    { name: "PBS National West", url: "https://pbs.lls.cdn.pbs.org/pst/index.m3u8" },
+    { name: "Baby Shark TV", url: "https://newidco-babysharktv-1-us.roku.wurl.tv/playlist.m3u8" },
+    { name: "Super Simple Songs", url: "https://janson-supersimplesongs-1-us.roku.wurl.tv/playlist.m3u8" },
+
+    { type: "header", name: "D.A.P's PBS Network Time!" },
+    { name: "PBS KET2", url: "https://2-fss-2.streamhoster.com/pl_140/amlst:200914-1315484/playlist.m3u8" },
+    { name: "PBS KET KY", url: "https://2-fss-2.streamhoster.com/pl_132/amlst:200914-1315486/playlist.m3u8" },
+    { name: "PBS KET Louisville KY", url: "https://2-fss-1.streamhoster.com/pl_134/amlst:200914-1282960/playlist.m3u8" },
+    { name: "PBS KET World", url: "https://2-fss-1.streamhoster.com/pl_122/amlst:200914-2942150/playlist.m3u8" },
+    { name: "PBS MPT Baltimore MD", url: "https://2-fss-2.streamhoster.com/pl_138/amlst:201814-1291584/playlist.m3u8" },
+    { name: "PBS National East", url: "https://pbs.lls.cdn.pbs.org/est/index.m3u8" },
+    { name: "PBS Create", url: "https://2-fss-1.streamhoster.com/pl_122/amlst:201814-2122456/playlist.m3u8" },
+    { name: "PBS Antiques Roadshow (1080p)", url: "https://pb-ft51qiiwihqtb.akamaized.net/PBS_Antiques_Roadshow.m3u8" },
+    { name: "PBS Genealogy (1080p)", url: "https://d21xx25clbv3i1.cloudfront.net/PBS_Genealogy.m3u8" },
+    { name: "PBS Nature (1080p)", url: "https://d3mr43kyql7wgk.cloudfront.net/PBS_Nature.m3u8" },
+
+    { type: "header", name: "D.A.P's True To Crime" },
+    { name: "48 Hours", url: "https://dai.google.com/linear/hls/event/JUr94WL2QAiVpGNHY5n5dA/master.m3u8" },
+    { name: "Crime & Justice", url: "https://linear-474.frequency.stream/dist/glewedtv/474/hls/master/playlist.m3u8" },
+    { name: "Law & Crime", url: "https://a-cdn.klowdtv.com/live3/law_720p/playlist.m3u8" },
+    { name: "Real Crime Uncovered", url: "https://a-cdn.klowdtv.com/live3/realcrimeuncovered_720p/playlist.m3u8" },
+    { name: "Real Crime", url: "https://d1qznhvm4vjve7.cloudfront.net/playlist.m3u8" },
+    { name: "60 Days In", url: "https://d2b8jic9gadlvy.cloudfront.net/v1/aenetworks_60daysin_1/samsungheadend_us/latest/main/hls/playlist.m3u8" },
+    { name: "ABC 20/20 (1080p)", url: "https://d4bq78o8d5tf5.cloudfront.net/ABC_2020.m3u8" },
+    { name: "American Crimes (1080p)", url: "https://pb-kdyzf3w51y7oz.akamaized.net/master.m3u8" },
+    { name: "Cold Case Files (1080p)", url: "https://pb-ab2qxzv3xf291.akamaized.net/Cold_Case_Files.m3u8" },
+    { name: "Crime 24/7 (720p)", url: "https://pb-l3ocdsysqugbb.akamaized.net/v1/aenetworks_crime247_1/samsungheadend_us/latest/main/hls/playlist.m3u8" },
+    { name: "Crime ThrillHer (720p)", url: "https://d1x6vwh5kyhcyb.cloudfront.net/v1/aenetworks_thrillher_1/samsungheadend_us/latest/main/hls/playlist.m3u8" },
+    { name: "Crimes Cults Killers (720p)", url: "https://d3ox1t0pcya837.cloudfront.net/v1/aenetworks_kriminal_1/samsungheadend_us/latest/main/hls/playlist.m3u8" },
+    { name: "Dateline 24/7 (1080p)", url: "https://pb-cpf6bqkmt2btj.akamaized.net/master.m3u8" },
+    { name: "Forensic Files (720p)", url: "https://pb-x9qsxrudiq9d2.akamaized.net/webvtt/v1/18584c3f3a2a4df8/88886014/master.m3u8" },
+    { name: "I Survived… (720p)", url: "https://d1ewp56x5c748d.cloudfront.net/v1/aenetworks_i_survived_1/samsungheadend_us/latest/main/hls/playlist.m3u8" },
+    { name: "Law & Crime (720p)", url: "https://ebd6ee5f.wurl.com/master/f36d25e7e52f1ba8d7e56eb859c636563214f541/U2Ftc3VuZ19MYXdhbmRDcmltZV9ITFM/playlist_scte.m3u8" },
+    { name: "Live PD Presents (1080p)", url: "https://d8o79xse42g9s.cloudfront.net/Live_PD_Presents.m3u8" },
+    { name: "The First 48 (720p)", url: "https://pb-bp21lplgw5225.akamaized.net/v1/ae_networks_first48_1/samsungheadend_us/latest/main/hls/playlist.m3u8" },
+    { name: "TruBlu (720p)", url: "https://dx5izydu5moez.cloudfront.net/playlist.m3u8" },
+    { name: "Witness to Justice (720p)", url: "https://dxwldsv8fdzik.cloudfront.net/v1/aenetworks_witnesstojustice_1/samsungheadend_us/latest/main/hls/playlist.m3u8" },
+
+    { type: "header", name: "D.A.P Sports" },
+    { name: "ACCDN", url: "https://raycom-accdn-firetv.amagi.tv/playlist.m3u8" },
+    { name: "T2 Tennis Channel", url: "https://ttc-tennischannelus-firetv.amagi.tv/playlist.m3u8" },
+    { name: "Bleav Football", url: "https://linear-493.frequency.stream/dist/glewedtv/493/hls/master/playlist.m3u8" },
+    { name: "BeIN SPORTS XTRA", url: "https://bein-esp-klowdtv.amagi.tv/playlist.m3u8" },
+    { name: "EchoSports", url: "https://a-cdn.klowdtv.com/live2/echosports_720p/playlist.m3u8" },
+    { name: "FTF Sports", url: "https://a-cdn.klowdtv.com/live2/ftf_720p/playlist.m3u8" },
+    { name: "Lacrosse TV", url: "https://a-cdn.klowdtv.com/live2/lsn_720p/playlist.m3u8" },
+    { name: "World Poker Tour (Opt 1)", url: "https://amg00218-wptenterprisesi-worldpokertour-klowdtv-5619e.amagi.tv/playlist/amg00218-wptenterprisesi-worldpokertour-klowdtv/playlist.m3u8" },
+    { name: "RightNow TV", url: "https://a-cdn.klowdtv.com/live2/rightnowtv_720p/playlist.m3u8" },
+    { name: "Fun Roads TV", url: "https://a-cdn.klowdtv.com/live3/funroads_720p/playlist.m3u8" },
+    { name: "Swerve Sports", url: "https://a-cdn.klowdtv.com/live3/swervewomenssports_720p/playlist.m3u8" },
+    { name: "Game+", url: "https://a-cdn.klowdtv.com/live2/fntsy_720p/playlist.m3u8" },
+    { name: "Overtime", url: "https://d1a8aq6t30gkqj.cloudfront.net/v1/amc_overtime_1/samsungheadend_us/latest/main/hls/playlist_hd.m3u8" },
+
+    { type: "header", name: "D.A.P Fight Sports" },
+    { name: "Channel Fight", url: "https://d15wqvt0xm15k4.cloudfront.net/v1/master/9d062541f2ff39b5c0f48b743c6411d25f62fc25/ChannelFight-DistroTV/266.m3u8" },
+    { name: "Fight Network", url: "https://amg00966-amg00966c10-amgplt0081.playout.now3.amagi.tv/playlist/amg00966-amg00966c10-amgplt0081/playlist.m3u8" },
+    { name: "FITE 24/7", url: "https://d3d85c7qkywguj.cloudfront.net/v1/master/9d062541f2ff39b5c0f48b743c6411d25f62fc25/FiteTV-DistroTV/263.m3u8" },
+    { name: "Swerve Combat (Opt 1)", url: "https://a-cdn.klowdtv.com/live3/swervecombat_720p/playlist.m3u8" },
+    { name: "Swerve Combat (Opt 2)", url: "https://linear-253.frequency.stream/mt/roku/253/hls/master/playlist.m3u8" },
+    { name: "Adrenaline+", url: "https://a-cdn.klowdtv.com/live3/adr_720p/playlist.m3u8" },
+    { name: "Hard Knocks", url: "https://d3uyzhwvmemdyf.cloudfront.net/v1/master/9d062541f2ff39b5c0f48b743c6411d25f62fc25/HardKnocks-PLEX/121.m3u8" },
+
+    { type: "header", name: "D.A.P's Hunting & Outdoors" },
+    { name: "This Old House", url: "https://thisoldhouse-2-us.roku.wurl.tv/playlist.m3u8" },
+    { name: "Pursuit UP", url: "https://linear-205.frequency.stream/dist/glewedtv/205/hls/master/playlist.m3u8" },
+    { name: "Pursuit UP (1080p)", url: "https://d1p1siomv3cm7b.cloudfront.net/playlist.m3u8" },
+    { name: "Pursuit Channel", url: "https://a-cdn.klowdtv.com/live3/pursuit_720p/playlist.m3u8" },
+    { name: "Shooting Sports Life", url: "https://a-cdn.klowdtv.com/live2/ssl_720p/playlist.m3u8" },
+    { name: "Wild TV", url: "https://a-cdn.klowdtv.com/live3/wildtv_720p/playlist.m3u8" },
+    { name: "Nautical Channel", url: "https://a-cdn.klowdtv.com/live2/nautical_720p/playlist.m3u8" },
+    { name: "Horse TV", url: "https://a-cdn.klowdtv.com/live2/horsetv_720p/playlist.m3u8" },
+    { name: "Outside TV", url: "https://outsidetv-outsidetv-mgsp6.amagi.tv/playlist/outsidetv-outsidetv/playlist.m3u8" },
+    { name: "Game & Fish TV (1080p)", url: "https://d32bh11mbsmi60.cloudfront.net/Game_Fish_TV.m3u8" },
+    { name: "MeatEater (1080p)", url: "https://d7hbn1ntae5ib.cloudfront.net/playlist.m3u8" },
+    { name: "Outdoor America (1080p)", url: "https://d1e354daam8g5r.cloudfront.net/playlist.m3u8" },
+    { name: "Waypoint TV (1080p)", url: "https://djb4ma5fajjay.cloudfront.net/Waypoint_TV.m3u8" },
+    { name: "Xtreme Outdoor Presented by HISTORY (720p)", url: "https://dxagbr7yc4m1d.cloudfront.net/v1/aenetworks_skills_thrills_1/samsungheadend_us/latest/main/hls/playlist.m3u8" },
+
+    { type: "header", name: "D.A.P's Motorsports" },
+    { name: "InTrouble", url: "https://amg00861-terncloud-amg00861c6-cineverse-us-964.playouts.now.amagi.tv/playlist/amg00861-terninternationalfast-introublehd-cineverseus/playlist.m3u8" },
+    { name: "InFast", url: "https://amg00861-terncloud-amg00861c5-cineverse-us-963.playouts.now.amagi.tv/playlist/amg00861-terninternationalfast-lifestyleushd-cineverseus/playlist.m3u8" },
+    { name: "Choppertown (Opt 1)", url: "https://linear-11.frequency.stream/dist/glewedtv/11/hls/master/playlist.m3u8" },
+    { name: "Choppertown (Opt 2)", url: "https://linear-11.frequency.stream/dist/plex/11/hls/master/playlist.m3u8" },
+    { name: "wedotv Cars", url: "https://a-cdn.klowdtv.com/live3/cars_720p/playlist.m3u8" },
+
+    { type: "header", name: "D.A.P's Nature" },
+    { name: "Real Disaster Channel", url: "https://linear-475.frequency.stream/dist/glewedtv/475/hls/master/playlist.m3u8" },
+    { name: "Unleashed by DOGTV", url: "https://a-cdn.klowdtv.com/live3/unleashed_720p/playlist.m3u8" },
+    { name: "Love Nature", url: "https://bamus-klowdtv.amagi.tv/playlist.m3u8" },
+    { name: "Beond TV", url: "https://amg01681-beondtv-amg01681c1-klowdtv-us-1826.playouts.now.amagi.tv/playlist/amg01681-beondtv-beondtv-klowdtvus/playlist.m3u8" },
+    { name: "Dog Whisperer", url: "https://amg01201-amg01201c30-cineverse-us-3100.playouts.now.amagi.tv/playlist/amg01201-cinedigmentertainment-dogwhispererwithcesarmilan-cineverseus/playlist.m3u8" },
+    { name: "Love Nature 4K (2160p)", url: "https://pb-ehs1glsha1juy.akamaized.net/Love_Nature_4K.m3u8" },
+    { name: "Love Pets (1080p)", url: "https://d31r8y66tn175.cloudfront.net/Love_Pets.m3u8" },
+    { name: "Lucky Dog (720p)", url: "https://d3j95sejv6mybj.cloudfront.net/Lucky_Dog.m3u8" },
+    { name: "Rovr Pets (1080p)", url: "https://pb-vbv1er6nemjg9.akamaized.net/Rovr_Pets.m3u8" },
+    { name: "Samsung Wild Life (720p)", url: "https://pb-olm46bexcljjf.akamaized.net/Samsung_Wild_Life.m3u8" },
+    { name: "The Pet Collective (1080p)", url: "https://pb-jc9emctsujawo.akamaized.net/playlist.m3u8" },
+    { name: "WildEarth (1080p)", url: "https://dqga3jatxofgx.cloudfront.net/WildEarth.m3u8" },
+
+    { type: "header", name: "D.A.P's Documentaries Drawer" },
+    { name: "Discovering China", url: "https://amg01314-amg01314c8-distrotv-us-10218.playouts.now.amagi.tv/playlist/amg01314-cgtn-cgtndiscoveringchina-distrotvus/playlist.m3u8" },
+    { name: "InWonder", url: "https://amg00861-terncloud-amg00861c4-cineverse-us-962.playouts.now.amagi.tv/playlist/amg00861-terninternationalfast-inwonderushd-cineverseus/playlist.m3u8" },
+    { name: "True History", url: "https://linear-188.frequency.stream/dist/glewedtv/188/hls/master/playlist.m3u8" },
+    { name: "wedotv Big Stories", url: "https://a-cdn.klowdtv.com/live3/bigstories_720p/playlist.m3u8" },
+    { name: "Smart Healthy Green", url: "https://amg16109-shgliving-amg16109c1-klowdtv-us-2235.playouts.now.amagi.tv/playlist/amg16109-shglivingnetwork-smarthealthygreenliving-klowdtvus/playlist.m3u8" },
+    { name: "American Stories", url: "https://a-cdn.klowdtv.com/live2/asn/playlist.m3u8" },
+    { name: "Ancient Aliens (720p)", url: "https://pb-pp8kvdgef1gx5.akamaized.net/v1/ae_networks_ancientaliens_1/samsungheadend_us/latest/main/hls/playlist.m3u8" },
+    { name: "Antiques Roadshow UK (720p)", url: "https://dbbg0ax8bgo7d.cloudfront.net/playlist.m3u8" },
+    { name: "Biography The Icons (1080p)", url: "https://dkaiai6digij6.cloudfront.net/Lights_Legends_Icons.m3u8" },
+    { name: "Dinos 24/7 (1080p)", url: "https://d3jxyaglfha0h3.cloudfront.net/Dinos_247.m3u8" },
+    { name: "Documentary+ (1080p)", url: "https://d1kx9y4yhe8h6h.cloudfront.net/playlist.m3u8" },
+    { name: "Historia (1080p)", url: "https://d1k3vzh2ivy22k.cloudfront.net/Historia.m3u8" },
+    { name: "History 365 (1080p)", url: "https://pb-162j8hrspp1iq.akamaized.net/History_365.m3u8" },
+    { name: "History & Warfare Now (1080p)", url: "https://d1nzda2a2b3swt.cloudfront.net/History_Warfare_Now.m3u8" },
+    { name: "InWonder (1080p)", url: "https://amg00861-terninternation-inwonderushd-samsungus-gqtpa.amagi.tv/playlist/amg00861-terninternation-inwonderushd-samsungus/playlist.m3u8" },
+    { name: "MagellanTV TV Now (1080p)", url: "https://pb-5evqkeieu3o6d.akamaized.net/Magellan_TV_Now.m3u8" },
+    { name: "Military Heroes (1080p)", url: "https://d25lps4m0jar17.cloudfront.net/Military_Heroes.m3u8" },
+    { name: "Modern Marvels Presented by History (720p)", url: "https://pb-m89wlp8flmjzf.akamaized.net/v1/aenetworks_modernmarvels_1/samsungheadend_us/latest/main/hls/playlist.m3u8" },
+    { name: "TED (1080p)", url: "https://d1b16tvvxk3tnu.cloudfront.net/TED.m3u8" },
+    { name: "The Curse of Oak Island (1080p)", url: "https://pb-jx22izjb024ns.akamaized.net/The_Curse_of_Oak_Island.m3u8" },
+
+    { type: "header", name: "D.A.P N Travel" },
+    { name: "Property & Reno", url: "https://linear-476.frequency.stream/dist/glewedtv/476/hls/master/playlist.m3u8" },
+    { name: "GoTraveler", url: "https://amg09501-amg09501c1-klowdtv-us-2398.playouts.now.amagi.tv/playlist/amg09501-quester-gotraveler-klowdtvus/playlist.m3u8" },
+    { name: "Travel Escapes", url: "https://a-cdn.klowdtv.com/live3/travelescapes_720p/playlist.m3u8" },
+    { name: "AWE", url: "https://a-cdn.klowdtv.com/live1/awe_720p/playlist.m3u8" },
+    { name: "AWE International", url: "https://a-cdn.klowdtv.com/live1/aweint/playlist.m3u8" },
+    { name: "AWE Plus", url: "https://a-cdn.klowdtv.com/live1/awee/playlist.m3u8" },
+    { name: "Antiques Roadshow UK (Opt 1)", url: "https://bbc-antiquesroadshowuk-1-us.roku.wurl.tv/playlist.m3u8" },
+    { name: "Antiques Roadshow UK (Opt 2)", url: "https://bbc-antiquesroadshowuk-1-us.roku.wurl.tv/playlist.m3u8" },
+    { name: "JOURNY TV (720p)", url: "https://d3s3a5c7f101eb.cloudfront.net/playlist.m3u8" },
+    { name: "PBS Travel (1080p)", url: "https://d3hqevbyoxtkoi.cloudfront.net/PBS_Travel.m3u8" },
+    { name: "Tastemade Travel (1080p)", url: "https://d6ef3usc6d9cl.cloudfront.net/Tastemade_Travel.m3u8" },
+    { name: "Xplore (1080p)", url: "https://depdwjha9qyli.cloudfront.net/Xplore.m3u8" },
+
+    { type: "header", name: "D.A.P's Shop It Up" },
+    { name: "Ning TV", url: "https://livefta.malimarcdn.com/ftaedge00/ningtv.sdp/playlist.m3u8" },
+    { name: "Tea TV", url: "https://livefta.malimarcdn.com/ftaedge00/teatv.sdp/playlist.m3u8" },
+    { name: "Uniquely Thai", url: "https://livefta.malimarcdn.com/ftaedge00/uniquely.sdp/playlist.m3u8" },
+    { name: "Jewelry Television", url: "https://82934cf9c8696bd2.mediapackage.us-east-1.amazonaws.com/out/v1/72b5a55e4c35445f9e742871aa0aefa2/index.m3u8" },
+
+    { type: "header", name: "D.A.P's Cook It Up!" },
+    { name: "Tastemade", url: "https://amg00047-tastemade-amg00047c4-cineverse-us-1361.playouts.now.amagi.tv/playlist/amg00047-tastemadefast-tastemadefreetv16-cineverseus/playlist.m3u8" },
+    { name: "Tastemade (1080p)", url: "https://pb-rlo4if9lnjthw.akamaized.net/Tastemade.m3u8" },
+    { name: "Tastemade Home", url: "https://amg00047-tastemade-amg00047c2-cineverse-us-1357.playouts.now.amagi.tv/playlist/amg00047-tastemadefast-tastemadehome-cineverseus/playlist.m3u8" },
+    { name: "Tastemade Travel", url: "https://amg00047-tastemade-amg00047c3-cineverse-us-1360.playouts.now.amagi.tv/playlist/amg00047-tastemadefast-tastemadetravel-cineverseus/playlist.m3u8" },
+    { name: "America's Test Kitchen (1080p)", url: "https://pb-zwcfuzg8t5abc.akamaized.net/Americas_Test_Kitchen.m3u8" },
+    { name: "bon appétit (1080p)", url: "https://bonappetit-samsung.amagi.tv/playlist.m3u8" },
+    { name: "BBC Food (1080p)", url: "https://d1e9r0b71zfwk7.cloudfront.net/playlist.m3u8" },
+    { name: "BuzzFeed Tasty (1080p)", url: "https://d2tlbbjop5ksk2.cloudfront.net/BuzzFeed_Tasty.m3u8" },
+    { name: "Emeril Lagasse Channel (1080p)", url: "https://d1ahlswyjfz32r.cloudfront.net/Emeril_Lagasse.m3u8" },
+    { name: "Gusto TV (720p)", url: "https://d31d5kw64c7b6i.cloudfront.net/v1/gustotv_samsung/samsungheadend_us/latest/main/hls/playlist.m3u8" },
+    { name: "Hungry (720p)", url: "https://dos35knl8v49a.cloudfront.net/v1/food/samsungheadend_us/latest/main/hls/playlist.m3u8" },
+    { name: "Jamie Oliver (1080p)", url: "https://pb-gxzycliwq14lw.akamaized.net/Jamie_Oliver.m3u8" },
+    { name: "K Food by CJ ENM (1080p)", url: "https://dmxcualdgbo80.cloudfront.net/b2c874a8_68b3_49cb_9435_0264a4d32e4a/hls/playlist.m3u8" },
+    { name: "Kitchen Nightmares (720p)", url: "https://pb-6nrjkl2kyw4ki.akamaized.net/Kitchen_Nightmares.m3u8" },
+    { name: "PBS Food (1080p)", url: "https://d3w43rc3ob044a.cloudfront.net/PBS_Food.m3u8" },
+    { name: "Rachael Ray Presents (1080p)", url: "https://dhy1wwavvr8nc.cloudfront.net/Rachel_Ray_Presents.m3u8" },
+
+    { type: "header", name: "D.A.P's Game Shows" },
+    { name: "Estrella Games", url: "https://cdn-uw2-prod.tsv2.amagi.tv/linear/amg00567-estrellamedia-estrellagames-distrotv/playlist.m3u8" },
+    { name: "Game Show Network", url: "https://a-cdn.klowdtv.com/live2/gsn_720p/playlist.m3u8" },
+    { name: "Impossible Quiz Show", url: "https://bbc-impossible-1-us.roku.wurl.tv/playlist.m3u8" },
+    { name: "The Price Is Right: The Barker Era", url: "https://amg00145-buzzr-bigballs-tpir-8min-rokuus-otcre.amagi.tv/playlist/amg00145-buzzr-bigballs-tpir-8min-rokuus/playlist.m3u8" },
+    { name: "Supermarket Sweep", url: "https://amg00145-buzzr-bigballs-supermarket-rokuus-iqx8g.amagi.tv/playlist/amg00145-buzzr-bigballs-supermarket-rokuus/playlist.m3u8" },
+    { name: "Deal or No Deal (1080p)", url: "https://pb-gnznqq6l66wre.akamaized.net/Deal_or_No_Deal.m3u8" },
+    { name: "Game Show Central (720p)", url: "https://pb-bunear28tuvaw.akamaized.net/v1/gsn_gameshowchannnel_1/samsungheadend_us/latest/main/hls/playlist.m3u8" },
+    { name: "Let's Make A Deal Classic (1080p)", url: "https://d35koolwpjpqaf.cloudfront.net/playlist.m3u8" },
+    { name: "Supermarket Sweep (1080p)", url: "https://pb-zp5s7cka1vjrd.akamaized.net/Supermarket_Sweep.m3u8" },
+
+    { type: "header", name: "D.A.P's Music Hall" },
+    { name: "QwestTV", url: "https://amg00447-qwesttv-qwestjazz-cineverse-ve12d.amagi.tv/playlist/amg00447-qwesttv-qwestjazz-cineverse/playlist.m3u8" },
+    { name: "Billboard TV", url: "https://d2zmd59prfyzho.cloudfront.net/Billboard_TV.m3u8" },
+    { name: "K POP by CJ ENM", url: "https://d3kmrn2mstrnk5.cloudfront.net/f4acc9ba_daae_4ed0_b836_32126cead919/hls/playlist.m3u8" },
+    { name: "NEW KPOP", url: "https://ads.its-newid.net/api/manifest.m3u8?ads.service_id=USAJ3000013FJ&channel_id=newid_338&tp=samsung_tvplus" },
+    { name: "Vevo 2K", url: "https://d3150hggbcolbo.cloudfront.net/Vevo_2K.m3u8" },
+    { name: "Vevo 2010s", url: "https://d3j50s1rkjmwi9.cloudfront.net/Vevo_2010s.m3u8" },
+    { name: "Vevo 70s", url: "https://d341pfs1smb2ef.cloudfront.net/Vevo_70s.m3u8" },
+    { name: "Vevo 80s", url: "https://d3svsvgc81yfe1.cloudfront.net/Vevo_80s.m3u8" },
+    { name: "Vevo 90s", url: "https://d29u7uq3k6xqk0.cloudfront.net/Vevo_90s.m3u8" },
+    { name: "Vevo Country", url: "https://pb-xrdbj9zdgm6ez.akamaized.net/Vevo_Country.m3u8" },
+    { name: "Vevo Country Rewind", url: "https://dtpafgv4jlncv.cloudfront.net/mt/rsu/v1/channel/AZlegsFKILvcvwCBYqT4vQ-V2/index.m3u8" },
+    { name: "Vevo Hip Hop", url: "https://d3vgs3ro3x6v8a.cloudfront.net/Vevo_Hip_Hop.m3u8" },
+    { name: "Vevo Latino", url: "https://d1vgg34wqvwdqj.cloudfront.net/Vevo_Latino.m3u8" },
+    { name: "Vevo Pop", url: "https://d2n5ee9u100agb.cloudfront.net/Vevo_Pop.m3u8" },
+    { name: "Vevo R&B", url: "https://d1hf773q57zx9s.cloudfront.net/Vevo_R_B.m3u8" },
+    { name: "Vevo Retro Rock", url: "https://d2hdqrshyzxswl.cloudfront.net/Vevo_Retro_Rock.m3u8" },
+    { name: "XITE 80s Flashback", url: "https://d1n314cytqn9r3.cloudfront.net/XITE_80s_Flashback.m3u8" },
+    { name: "XITE 90s Throwback", url: "https://d284aawtm5vi48.cloudfront.net/XITE_90s_Throwback.m3u8" },
+    { name: "XITE Celebrates", url: "https://dt1s4l2cmiyit.cloudfront.net/XITE_Celebrates.m3u8" },
+    { name: "XITE Christian Hits", url: "https://d2tuyivcrvbj81.cloudfront.net/XITE_Christian_Hits.m3u8" },
+    { name: "XITE Classic Country", url: "https://pb-wgi5ljoabjgdm.akamaized.net/XITE_Countrys_Finest.m3u8" },
+    { name: "XITE Country Today", url: "https://pb-5itqeen09owrs.akamaized.net/XITE_Country_Today.m3u8" },
+    { name: "XITE Hits", url: "https://d726x48n2pd5h.cloudfront.net/XITE_Hits.m3u8" },
+    { name: "XITE Just Chill", url: "https://dvnftgdlbnemm.cloudfront.net/XITE_Just_Chill.m3u8" },
+    { name: "XITE Nuevo Latino", url: "https://d3bsgqzbpkrvbb.cloudfront.net/XITE_Nuevo_Latino.m3u8" },
+    { name: "XITE R&B Classic Jams", url: "https://pb-bakywpoa0kn1n.akamaized.net/XITE_RnB_Classic_Jams.m3u8" },
+    { name: "XITE Reggae Vibes", url: "https://dw2m7yrngfg8c.cloudfront.net/XITE_Reggae_Vibes.m3u8" },
+    { name: "XITE Rock x Metal", url: "https://d198ro05q94rc4.cloudfront.net/XITE_Rock_On.m3u8" },
+    { name: "XITE Siempre Latino", url: "https://d1xc25jm9e0l4b.cloudfront.net/XITE_Siempre_Latino.m3u8" },
+    { name: "Trace Latina", url: "https://amg01131-tracetv-tracelatina-klowdtv-v10em.amagi.tv/playlist/amg01131-tracetv-tracelatina-klowdtv/playlist.m3u8" },
+    { name: "Trace Urban", url: "https://amg01131-tracetv-traceurban-klowdtv-utiqd.amagi.tv/playlist/amg01131-tracetv-traceurban-klowdtv/playlist.m3u8" },
+    { name: "Clubbing TV UK", url: "https://a-cdn.klowdtv.com/live3/clubbingtv_720p/playlist.m3u8" },
+    { name: "The Country Network", url: "https://a-cdn.klowdtv.com/live2/countrytv_720p/playlist.m3u8" },
+
+    { type: "header", name: "News Like D.A.P" },
+    { name: "Schwab Network", url: "https://tdameritrade-distro.amagi.tv/playlist.m3u8" },
+    { name: "Newsmax TV", url: "https://a-cdn.klowdtv.com/live2/newsmax_720p/playlist.m3u8" },
+    { name: "Newsmax 2", url: "https://amg00217-newsmax-newsmax-rokuus-dur76.amagi.tv/playlist.m3u8" },
+    { name: "Estrella News (Opt 1)", url: "https://amg00567-estrellamedia-estrellanews-distrotv-ddste.amagi.tv/playlist/amg00567-estrellamedia-estrellanews-distrotv/playlist.m3u8" },
+    { name: "Estrella News (Opt 2)", url: "https://estrellanews-plex.amagi.tv/playlist.m3u8" },
+    { name: "Euronews English", url: "https://a-cdn.klowdtv.com/live3/euronews_720p/playlist.m3u8" },
+    { name: "France 24", url: "https://a-cdn.klowdtv.com/live2/france24_720p/playlist.m3u8" },
+    { name: "France 24 Espanol", url: "https://a-cdn.klowdtv.com/live2/france24sp_720p/playlist.m3u8" },
+    { name: "GB News", url: "https://amg01076-lightning-amg01076c7-klowdtv-us-2128.playouts.now.amagi.tv/playlist/amg01076-lightning-gbnews-klowdtvus/playlist.m3u8" },
+    { name: "OAN", url: "https://a-cdn.klowdtv.com/live1/oan_720p/playlist.m3u8" },
+    { name: "OAN Plus", url: "https://oneamericanews-roku-us.amagi.tv/playlist.m3u8" },
+    { name: "Redseat The First", url: "https://a-cdn.klowdtv.com/live2/thefirst_720p/playlist.m3u8" },
+    { name: "Salem News", url: "https://amg00732-salemmediagroup-salemnews-klowdtv-79zyj.amagi.tv/playlist/amg00732-salemmediagroup-salemnews-klowdtv/playlist.m3u8" },
+    { name: "USA TODAY (Opt 1)", url: "https://a-cdn.klowdtv.com/live3/usatoday_720p/playlist.m3u8" },
+    { name: "USA TODAY (Opt 2)", url: "https://cdn-ue1-prod.tsv2.amagi.tv/linear/amg00731-gannettcoinc-usatodaynews-plex/playlist.m3u8" },
+    { name: "WION", url: "https://wion-klowdtv.amagi.tv/playlist.m3u8" },
+    { name: "AccuWeather Now", url: "https://amg00684-accuweather-accuweather-rokuus-0endj.amagi.tv/playlist.m3u8" },
+
+    { type: "header", name: "D.A.P's Religion & Debates" },
+    { name: "Access 4 PAC", url: "https://reflect-channel18vod-springfield-il-us.cablecast.tv/live-16/live/stream-4/live.m3u8" },
+    { name: "TBN+", url: "https://a-cdn.klowdtv.com/live3/tbn_720p/playlist.m3u8" },
+    { name: "Supreme Master TV", url: "https://lbs-us1.suprememastertv.com/720p.m3u8" },
+    { name: "ABN Afghanistan", url: "https://mediaserver.abnvideos.com/streams/abnafghanistan.m3u8" },
+    { name: "ABN Africa", url: "https://mediaserver.abnvideos.com/streams/abnafrica.m3u8" },
+    { name: "ABN China", url: "https://mediaserver.abnvideos.com/streams/abnchina.m3u8" },
+    { name: "ABN Freedom of Speech", url: "https://mediaserver.abnvideos.com/streams/freedom_of_speech.m3u8" },
+    { name: "ABN I AM", url: "https://mediaserver.abnvideos.com/streams/i_am_.m3u8" },
+    { name: "ABN Son of God", url: "https://mediaserver.abnvideos.com/streams/son_of_god_.m3u8" },
+    { name: "ABN TV India", url: "https://mediaserver.abnvideos.com/streams/abntvindia.m3u8" },
+    { name: "ABN Urdu", url: "https://mediaserver.abnvideos.com/streams/abnurdu.m3u8" },
+    { name: "Al-MahdiTV", url: "https://iptv.almahditv.com/almahditv/playlist.m3u8" },
+    { name: "Jewish Life TV", url: "https://a-cdn.klowdtv.com/live3/jltv_720p/playlist.m3u8" }
+  ];
+
+  const player = videojs('player');
+  const display = document.getElementById('channel-display');
+  const badge = document.getElementById('category-badge');
+  const list = document.getElementById('ch-list');
+
+  // Pre-process channels to attach category names
+  let currentCategory = "";
+  channelData.forEach(item => {
+      if (item.type === "header") {
+          currentCategory = item.name;
+      } else {
+          channelsWithCategories.push({ ...item, category: currentCategory });
+      }
+  });
+
+  function playChannel(index) {
+    const ch = channelsWithCategories[index];
+    player.src({src: ch.url, type: 'application/x-mpegURL'});
+    player.play();
+    display.innerText = ch.name;
+    badge.innerText = ch.category; 
+    document.querySelectorAll('.btn').forEach(btn => btn.classList.remove('active'));
+    document.getElementById('channel-' + index)?.classList.add('active');
+  }
+
   function nav(direction) {
     let currentIdx = channelsWithCategories.findIndex(c => c.name === display.innerText);
     currentIdx = (currentIdx + direction + channelsWithCategories.length) % channelsWithCategories.length;
