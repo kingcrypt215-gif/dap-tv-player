@@ -5,19 +5,24 @@
   <link href="https://vjs.zencdn.net/8.10.0/video-js.css" rel="stylesheet" />
   <style>
     body { background: #000; color: #fff; font-family: sans-serif; margin: 0; overflow-x: hidden; }
-    
-    /* Branding and display elements moved into the container */
     #fullscreen-target { position: relative; width: 100%; background: #000; }
+    
     #brand { text-align: center; color: #FFD700; font-size: 24px; font-weight: bold; padding: 10px; position: relative; z-index: 20; }
     #channel-display { text-align: center; color: #FFD700; background: #000; padding: 8px; font-weight: bold; font-size: 18px; border-bottom: 2px solid #FFD700; position: relative; z-index: 20; }
+    
     #category-badge {
         position: absolute; top: 80px; left: 10px; z-index: 20;
-        background: transparent; color: #FFD700;
+        background: rgba(0,0,0,0.6); color: #FFD700;
         padding: 5px 10px; font-size: 12px; font-weight: bold;
         pointer-events: none; text-transform: uppercase;
-        text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
     }
-    
+
+    /* Hide Brand/Channel Title when Fullscreen */
+    #fullscreen-target:fullscreen #brand,
+    #fullscreen-target:fullscreen #channel-display {
+        display: none !important;
+    }
+
     .video-js { width: 100% !important; aspect-ratio: 16/9; }
 
     .nav-box { display: flex; justify-content: space-between; padding: 10px; gap: 5px; }
@@ -48,9 +53,20 @@
 
 <script src="https://vjs.zencdn.net/8.10.0/video.min.js"></script>
 <script>
-  let channelsWithCategories = [];
+  const player = videojs('player', { controlBar: { fullscreenToggle: true } });
+  const display = document.getElementById('channel-display');
+  const badge = document.getElementById('category-badge');
+  const list = document.getElementById('ch-list');
+
+  player.ready(function() {
+    this.requestFullscreen = function() {
+        const elem = document.getElementById('fullscreen-target');
+        if (elem.requestFullscreen) elem.requestFullscreen();
+    };
+  });
+
   const channelData = [
-    { type: "header", name: "D.A.P's entrepreneur & Money" },
+    { type: "header", name: "D.A.P's Entrepreneur & Money" },
     { name: "Entrepreneur TV", url: "https://cineverse-entrepreneurtv-entrepreneurtv-1-us.ono.wurl.tv/playlist.m3u8" },
     { name: "My Money", url: "https://dqaj8xog66lli.cloudfront.net/v1/master/9d062541f2ff39b5c0f48b743c6411d25f62fc25/DistroTV-MuxIP-MyMoney/468.m3u8" },
     { name: "CGTN Global Biz", url: "https://amg01314-amg01314c6-distrotv-us-10220.playouts.now.amagi.tv/playlist/amg01314-cgtn-cgtnglobalbiz-distrotvus/playlist.m3u8" },
@@ -394,21 +410,8 @@
     { name: "Jewish Life TV", url: "https://a-cdn.klowdtv.com/live3/jltv_720p/playlist.m3u8" }
   ];
 
-  const player = videojs('player', { controlBar: { fullscreenToggle: true } });
-  const display = document.getElementById('channel-display');
-  const badge = document.getElementById('category-badge');
-  const list = document.getElementById('ch-list');
-
-  // Force Video.js to fullscreen the container instead of just the video
-  player.ready(function() {
-    this.requestFullscreen = function() {
-        const elem = document.getElementById('fullscreen-target');
-        if (elem.requestFullscreen) elem.requestFullscreen();
-    };
-  });
-
+  let channelsWithCategories = [];
   let currentCat = "General";
-  channelsWithCategories = [];
   channelData.forEach(item => {
       if (item.type === "header") currentCat = item.name;
       else channelsWithCategories.push({...item, category: currentCat});
