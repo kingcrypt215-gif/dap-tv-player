@@ -8,6 +8,7 @@
     #brand { text-align: center; color: #FFD700; font-size: 24px; font-weight: bold; padding: 10px; }
     #channel-display { text-align: center; color: #FFD700; background: #000; padding: 8px; font-weight: bold; font-size: 18px; border-bottom: 2px solid #FFD700; }
     
+    /* Wrapper locked to 16:9, acts as the Fullscreen target */
     .video-container { position: relative; width: 100%; aspect-ratio: 16/9; background: #000; overflow: hidden; }
     .video-js { width: 100% !important; height: 100% !important; }
     
@@ -20,13 +21,13 @@
         pointer-events: none;
     }
     
-    /* Fullscreen nav: Only visible when player controls are visible */
+    /* Fullscreen nav: Shown only in fullscreen, fades with controls */
     .fs-nav { 
         position: absolute; bottom: 50px; left: 50%; transform: translateX(-50%); 
         z-index: 2147483647; display: none; gap: 10px; opacity: 0; transition: opacity 0.3s; 
     }
-    .vjs-fullscreen .fs-nav { display: flex; }
-    .vjs-user-active .fs-nav { opacity: 1; }
+    .video-container:fullscreen .fs-nav { display: flex; }
+    .video-container:fullscreen.vjs-user-active .fs-nav { opacity: 1; }
     .fs-btn { background: #FFD700; color: #000; border: none; padding: 8px 16px; cursor: pointer; font-weight: bold; font-size: 14px; border-radius: 4px; }
 
     .nav-box { display: flex; justify-content: space-between; padding: 10px; }
@@ -42,7 +43,7 @@
 
 <div id="brand">D.A.P TV LIVE</div>
 <div id="channel-display">Select a Channel</div>
-<div class="video-container">
+<div id="video-wrapper" class="video-container">
   <div id="category-badge">Category</div>
   <div class="fs-nav">
       <button class="fs-btn" onclick="nav(-1)">PREV</button>
@@ -63,6 +64,13 @@
   const player = videojs('player', {
     autoplay: true,
     controlBar: { volumePanel: { inline: false, vertical: true } }
+  });
+
+  // Track Fullscreen state for FS buttons
+  player.on('fullscreenchange', () => {
+    const wrapper = document.getElementById('video-wrapper');
+    if (player.isFullscreen()) wrapper.classList.add('vjs-fullscreen');
+    else wrapper.classList.remove('vjs-fullscreen');
   });
 
   const display = document.getElementById('channel-display');
