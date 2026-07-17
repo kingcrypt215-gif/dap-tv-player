@@ -1,3 +1,5 @@
+This code combines everything we discussed: the **GitHub-ready structure**, the **internal branding** (which now travels with the video into full-screen), and the **mobile-optimized viewport**. I have also removed the "Open Full Page" button as requested.
+```html
 <!DOCTYPE html>
 <html>
 <head>
@@ -5,23 +7,24 @@
   <link href="https://vjs.zencdn.net/8.10.0/video-js.css" rel="stylesheet" />
   <style>
     body { background: #000; color: #fff; font-family: sans-serif; margin: 0; overflow-x: hidden; }
-    #brand { text-align: center; color: #FFD700; font-size: 24px; font-weight: bold; padding: 10px; }
-    #channel-display { text-align: center; color: #FFD700; background: #000; padding: 8px; font-weight: bold; font-size: 18px; border-bottom: 2px solid #FFD700; }
     
-    .video-container { position: relative; width: 100%; aspect-ratio: 16/9; }
-    .video-js { width: 100% !important; height: 100% !important; }
-    
+    /* Branding and display elements moved into the container */
+    #fullscreen-target { position: relative; width: 100%; background: #000; }
+    #brand { text-align: center; color: #FFD700; font-size: 24px; font-weight: bold; padding: 10px; position: relative; z-index: 20; }
+    #channel-display { text-align: center; color: #FFD700; background: #000; padding: 8px; font-weight: bold; font-size: 18px; border-bottom: 2px solid #FFD700; position: relative; z-index: 20; }
     #category-badge {
-        position: absolute; top: 10px; left: 10px; z-index: 10;
+        position: absolute; top: 80px; left: 10px; z-index: 20;
         background: transparent; color: #FFD700;
         padding: 5px 10px; font-size: 12px; font-weight: bold;
-        border: none; pointer-events: none;
-        text-transform: uppercase;
+        pointer-events: none; text-transform: uppercase;
         text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
     }
+    
+    .video-js { width: 100% !important; aspect-ratio: 16/9; }
 
     .nav-box { display: flex; justify-content: space-between; padding: 10px; gap: 5px; }
     .nav-btn { background: #FFD700; color: #000; border: none; padding: 10px; cursor: pointer; font-weight: bold; flex: 1; }
+    
     #ch-list { height: 350px; overflow-y: auto; background: #111; }
     .btn { display: block; width: 100%; padding: 12px; border: none; background: #222; color: #fff; text-align: left; cursor: pointer; border-bottom: 1px solid #444; }
     .btn.active { background: #FFD700 !important; color: #000 !important; font-weight: bold; }
@@ -31,16 +34,15 @@
 </head>
 <body>
 
-<div id="brand">D.A.P TV LIVE</div>
-<div id="channel-display">Select a Channel</div>
-<div class="video-container">
+<div id="fullscreen-target">
+  <div id="brand">D.A.P TV LIVE</div>
+  <div id="channel-display">Select a Channel</div>
   <div id="category-badge">Category</div>
   <video id="player" class="video-js vjs-default-skin" controls playsinline></video>
 </div>
 
 <div class="nav-box">
   <button class="nav-btn" onclick="nav(-1)">PREVIOUS</button>
-  <button class="nav-btn" onclick="testFullPage()">OPEN FULL PAGE</button>
   <button class="nav-btn" onclick="nav(1)">NEXT</button>
 </div>
 
@@ -48,11 +50,6 @@
 
 <script src="https://vjs.zencdn.net/8.10.0/video.min.js"></script>
 <script>
-  function testFullPage() {
-    const previewUrl = "https://sites.google.com/u/3/d/10aD2fc-Xct3PeSmShpSZbc3PUOVd7_v_/p/1UPPMyXvbenbQ9YvjsV8uGG3bfSAniS0F/preview?authuser=3";
-    window.open(previewUrl, '_blank');
-  }
-
   let channelsWithCategories = [];
   const channelData = [
     { type: "header", name: "D.A.P's entrepreneur & Money" },
@@ -404,6 +401,14 @@
   const badge = document.getElementById('category-badge');
   const list = document.getElementById('ch-list');
 
+  // Force Video.js to fullscreen the container instead of just the video
+  player.ready(function() {
+    this.requestFullscreen = function() {
+        const elem = document.getElementById('fullscreen-target');
+        if (elem.requestFullscreen) elem.requestFullscreen();
+    };
+  });
+
   let currentCat = "General";
   channelsWithCategories = [];
   channelData.forEach(item => {
@@ -441,3 +446,5 @@
 </script>
 </body>
 </html>
+
+```
