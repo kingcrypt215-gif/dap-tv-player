@@ -1,32 +1,35 @@
 <!DOCTYPE html>
 <html>
 <head>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
   <link href="https://vjs.zencdn.net/8.10.0/video-js.css" rel="stylesheet" />
   <style>
     body { background: #000; color: #fff; font-family: sans-serif; margin: 0; }
-    #brand { text-align: center; color: #FFD700; font-size: 24px; font-weight: bold; padding: 10px; }
-    #channel-display { text-align: center; color: #FFD700; background: #000; padding: 8px; font-weight: bold; font-size: 18px; border-bottom: 2px solid #FFD700; }
+    #brand { text-align: center; color: #FFD700; font-size: clamp(18px, 5vw, 24px); font-weight: bold; padding: 10px; }
+    #channel-display { text-align: center; color: #FFD700; background: #000; padding: 10px; font-weight: bold; font-size: clamp(16px, 4vw, 20px); border-bottom: 2px solid #FFD700; }
     
-    .video-container { position: relative; width: 100%; aspect-ratio: 16/9; }
+    /* Stabilized video container */
+    .video-container { position: relative; width: 100%; aspect-ratio: 16/9; background: #000; overflow: hidden; }
     .video-js { width: 100% !important; height: 100% !important; }
     
-    /* Minimalist Transparent Branding */
+    /* Branding pinned to top-left of player, travels with full-screen */
     #category-badge {
-        position: absolute; top: 10px; left: 10px; z-index: 10;
-        background: transparent; color: #FFD700;
-        padding: 5px 10px; font-size: 12px; font-weight: bold;
-        border: none; pointer-events: none;
-        text-transform: uppercase;
-        text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+        position: absolute; top: 15px; left: 15px; z-index: 2147483647;
+        color: #FFD700; background: rgba(0,0,0,0.4);
+        padding: 5px 12px; font-size: clamp(10px, 3vw, 14px); font-weight: bold;
+        text-transform: uppercase; text-shadow: 1px 1px 2px #000;
+        pointer-events: none; border-radius: 4px;
     }
 
-    .nav-box { display: flex; justify-content: space-between; padding: 10px; }
-    .nav-btn { background: #FFD700; color: #000; border: none; padding: 10px 20px; cursor: pointer; font-weight: bold; }
-    #ch-list { height: 350px; overflow-y: auto; background: #111; }
-    .btn { display: block; width: 100%; padding: 12px; border: none; background: #222; color: #fff; text-align: left; cursor: pointer; border-bottom: 1px solid #444; }
+    .nav-box { display: flex; padding: 10px; gap: 10px; }
+    .nav-btn { background: #FFD700; color: #000; border: none; padding: 12px; cursor: pointer; font-weight: bold; flex: 1; border-radius: 4px; }
+    
+    /* Improved readability for channel list */
+    #ch-list { height: 40vh; overflow-y: auto; background: #111; border-top: 1px solid #333; }
+    .btn { display: block; width: 100%; padding: 15px; border: none; background: #1a1a1a; color: #fff; text-align: left; cursor: pointer; border-bottom: 1px solid #333; font-size: 16px; }
     .btn.active { background: #FFD700 !important; color: #000 !important; font-weight: bold; }
     .btn:hover { background: #333; }
-    .section-header { background: #000; color: #FFD700; padding: 10px; font-size: 14px; font-weight: bold; text-transform: uppercase; border-bottom: 2px solid #FFD700; border-top: 2px solid #FFD700; }
+    .section-header { background: #222; color: #FFD700; padding: 12px; font-size: 14px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; }
   </style>
 </head>
 <body>
@@ -35,7 +38,7 @@
 <div id="channel-display">Select a Channel</div>
 <div class="video-container">
   <div id="category-badge">Category</div>
-  <video id="player" class="video-js vjs-default-skin" controls playsinline></video>
+  <video id="player" class="video-js vjs-default-skin" controls playsinline autoplay></video>
 </div>
 
 <div class="nav-box">
@@ -48,7 +51,6 @@
 <script src="https://vjs.zencdn.net/8.10.0/video.min.js"></script>
 <script>
   let channelsWithCategories = [];
-  
   const channelData = [
     { type: "header", name: "D.A.P's entrepreneur & Money" },
     { name: "Entrepreneur TV", url: "https://cineverse-entrepreneurtv-entrepreneurtv-1-us.ono.wurl.tv/playlist.m3u8" },
@@ -415,12 +417,18 @@
     { name: "Jewish Life TV", url: "https://a-cdn.klowdtv.com/live3/jltv_720p/playlist.m3u8" }
   ];
 
-  const player = videojs('player');
+  // Configure player with Volume Panel and Autoplay
+  const player = videojs('player', {
+    autoplay: true,
+    controlBar: {
+      volumePanel: { inline: true }
+    }
+  });
+
   const display = document.getElementById('channel-display');
   const badge = document.getElementById('category-badge');
   const list = document.getElementById('ch-list');
 
-  // Pre-process channels to attach category names
   let currentCategory = "";
   channelData.forEach(item => {
       if (item.type === "header") {
@@ -446,7 +454,6 @@
     playChannel(currentIdx);
   }
 
-  // Build the list
   channelData.forEach((item, index) => {
       if (item.type === "header") {
           const h = document.createElement('div');
