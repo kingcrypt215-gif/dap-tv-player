@@ -5,29 +5,23 @@
   <link href="https://vjs.zencdn.net/8.10.0/video-js.css" rel="stylesheet" />
   <style>
     body { background: #000; color: #fff; font-family: sans-serif; margin: 0; overflow-x: hidden; }
-    #fullscreen-target { position: relative; width: 100%; background: #000; }
+    #brand { text-align: center; color: #FFD700; font-size: 24px; font-weight: bold; padding: 10px; }
+    #channel-display { text-align: center; color: #FFD700; background: #000; padding: 8px; font-weight: bold; font-size: 18px; border-bottom: 2px solid #FFD700; }
     
-    #brand { text-align: center; color: #FFD700; font-size: 24px; font-weight: bold; padding: 10px; position: relative; z-index: 20; }
-    #channel-display { text-align: center; color: #FFD700; background: #000; padding: 8px; font-weight: bold; font-size: 18px; border-bottom: 2px solid #FFD700; position: relative; z-index: 20; }
+    .video-container { position: relative; width: 100%; aspect-ratio: 16/9; }
+    .video-js { width: 100% !important; height: 100% !important; }
     
     #category-badge {
-        position: absolute; top: 80px; left: 10px; z-index: 20;
-        background: rgba(0,0,0,0.6); color: #FFD700;
+        position: absolute; top: 10px; left: 10px; z-index: 10;
+        background: transparent; color: #FFD700;
         padding: 5px 10px; font-size: 12px; font-weight: bold;
-        pointer-events: none; text-transform: uppercase;
+        border: none; pointer-events: none;
+        text-transform: uppercase;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
     }
-
-    /* Hide Brand/Channel Title when Fullscreen */
-    #fullscreen-target:fullscreen #brand,
-    #fullscreen-target:fullscreen #channel-display {
-        display: none !important;
-    }
-
-    .video-js { width: 100% !important; aspect-ratio: 16/9; }
 
     .nav-box { display: flex; justify-content: space-between; padding: 10px; gap: 5px; }
     .nav-btn { background: #FFD700; color: #000; border: none; padding: 10px; cursor: pointer; font-weight: bold; flex: 1; }
-    
     #ch-list { height: 350px; overflow-y: auto; background: #111; }
     .btn { display: block; width: 100%; padding: 12px; border: none; background: #222; color: #fff; text-align: left; cursor: pointer; border-bottom: 1px solid #444; }
     .btn.active { background: #FFD700 !important; color: #000 !important; font-weight: bold; }
@@ -37,15 +31,16 @@
 </head>
 <body>
 
-<div id="fullscreen-target">
-  <div id="brand">D.A.P TV LIVE</div>
-  <div id="channel-display">Select a Channel</div>
+<div id="brand">D.A.P TV LIVE</div>
+<div id="channel-display">Select a Channel</div>
+<div class="video-container">
   <div id="category-badge">Category</div>
   <video id="player" class="video-js vjs-default-skin" controls playsinline></video>
 </div>
 
 <div class="nav-box">
   <button class="nav-btn" onclick="nav(-1)">PREVIOUS</button>
+  <button class="nav-btn" onclick="testFullPage()">OPEN FULL PAGE</button>
   <button class="nav-btn" onclick="nav(1)">NEXT</button>
 </div>
 
@@ -53,20 +48,14 @@
 
 <script src="https://vjs.zencdn.net/8.10.0/video.min.js"></script>
 <script>
-  const player = videojs('player', { controlBar: { fullscreenToggle: true } });
-  const display = document.getElementById('channel-display');
-  const badge = document.getElementById('category-badge');
-  const list = document.getElementById('ch-list');
+  function testFullPage() {
+    const previewUrl = "https://sites.google.com/u/3/d/10aD2fc-Xct3PeSmShpSZbc3PUOVd7_v_/p/1UPPMyXvbenbQ9YvjsV8uGG3bfSAniS0F/preview?authuser=3";
+    window.open(previewUrl, '_blank');
+  }
 
-  player.ready(function() {
-    this.requestFullscreen = function() {
-        const elem = document.getElementById('fullscreen-target');
-        if (elem.requestFullscreen) elem.requestFullscreen();
-    };
-  });
-
+  let channelsWithCategories = [];
   const channelData = [
-    { type: "header", name: "D.A.P's Entrepreneur & Money" },
+    { type: "header", name: "D.A.P's entrepreneur & Money" },
     { name: "Entrepreneur TV", url: "https://cineverse-entrepreneurtv-entrepreneurtv-1-us.ono.wurl.tv/playlist.m3u8" },
     { name: "My Money", url: "https://dqaj8xog66lli.cloudfront.net/v1/master/9d062541f2ff39b5c0f48b743c6411d25f62fc25/DistroTV-MuxIP-MyMoney/468.m3u8" },
     { name: "CGTN Global Biz", url: "https://amg01314-amg01314c6-distrotv-us-10220.playouts.now.amagi.tv/playlist/amg01314-cgtn-cgtnglobalbiz-distrotvus/playlist.m3u8" },
@@ -410,8 +399,13 @@
     { name: "Jewish Life TV", url: "https://a-cdn.klowdtv.com/live3/jltv_720p/playlist.m3u8" }
   ];
 
-  let channelsWithCategories = [];
+  const player = videojs('player', { controlBar: { fullscreenToggle: true } });
+  const display = document.getElementById('channel-display');
+  const badge = document.getElementById('category-badge');
+  const list = document.getElementById('ch-list');
+
   let currentCat = "General";
+  channelsWithCategories = [];
   channelData.forEach(item => {
       if (item.type === "header") currentCat = item.name;
       else channelsWithCategories.push({...item, category: currentCat});
