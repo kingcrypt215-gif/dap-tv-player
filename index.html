@@ -71,7 +71,7 @@
 <script>
   const player = videojs('player', {
     autoplay: true,
-    muted: true, // Added for reliable browser auto-start
+    muted: true,
     controlBar: { volumePanel: { inline: false, vertical: true } }
   });
 
@@ -456,6 +456,9 @@
     display.innerText = ch.name;
     badge.innerText = ch.category; 
     
+    // Save state
+    localStorage.setItem('dap_last_channel', index);
+    
     titleOverlay.innerText = ch.name;
     titleOverlay.style.opacity = 1;
     setTimeout(() => { titleOverlay.style.opacity = 0; }, 2000);
@@ -481,7 +484,9 @@
       }
   });
   
-  playChannel(0);
+  // Load saved channel or default to 0
+  const savedChannel = localStorage.getItem('dap_last_channel');
+  playChannel(savedChannel !== null ? parseInt(savedChannel) : 0);
 </script>
 </body>
 </html>
