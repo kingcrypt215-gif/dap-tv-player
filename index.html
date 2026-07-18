@@ -6,7 +6,6 @@
   <link rel="manifest" href="manifest.json">
   <link href="https://vjs.zencdn.net/8.10.0/video-js.css" rel="stylesheet" />
   
-  <!-- Google Analytics Tag -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
@@ -44,8 +43,6 @@
         pointer-events: none; text-align: center; width: 90%; white-space: nowrap;
         font-size: clamp(14px, 5vw, 28px);
     }
-    
-    .vjs-fullscreen #category-badge { display: block !important; }
     
     .fs-nav { 
         position: absolute; bottom: 50px; left: 50%; transform: translateX(-50%); 
@@ -91,12 +88,6 @@
 <script>
   if ('serviceWorker' in navigator) { navigator.serviceWorker.register('./sw.js'); }
 
-  function requestSystemFullscreen() {
-    const elem = document.documentElement;
-    if (elem.requestFullscreen) elem.requestFullscreen();
-    else if (elem.webkitRequestFullscreen) elem.webkitRequestFullscreen();
-  }
-
   const player = videojs('player', { 
     autoplay: true, muted: true, 
     controlBar: { volumePanel: { inline: false, vertical: true } } 
@@ -106,21 +97,6 @@
   player.on('error', function() { 
     if (retryCount < 2) { retryCount++; player.load(); } 
     else { retryCount = 0; nav(1); }
-  });
-
-  player.on('fullscreenchange', function() {
-    const badge = document.getElementById('category-badge');
-    const titleOverlay = document.getElementById('fs-channel-title');
-    const fsNav = document.querySelector('.fs-nav');
-    if (player.isFullscreen()) {
-        player.el().appendChild(badge);
-        player.el().appendChild(titleOverlay);
-        player.el().appendChild(fsNav);
-    } else {
-        document.getElementById('player-wrapper').appendChild(badge);
-        document.getElementById('player-wrapper').appendChild(titleOverlay);
-        document.getElementById('player-wrapper').appendChild(fsNav);
-    }
   });
 
   const display = document.getElementById('channel-display');
@@ -482,7 +458,7 @@
   function playChannel(index) {
     const ch = channelsWithCategories[index];
     gtag('event', 'channel_view', { 'channel_name': ch.name });
-    requestSystemFullscreen();
+    
     player.src({src: ch.url, type: 'application/x-mpegURL'});
     player.play();
     display.innerText = (index + 1) + ". " + ch.name;
@@ -539,4 +515,3 @@
 </script>
 </body>
 </html>
-
