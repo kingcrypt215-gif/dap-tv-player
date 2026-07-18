@@ -453,13 +453,12 @@
     const ch = channelsWithCategories[index];
     player.src({src: ch.url, type: 'application/x-mpegURL'});
     player.play();
-    display.innerText = ch.name;
+    display.innerText = (index + 1) + ". " + ch.name;
     badge.innerText = ch.category; 
     
-    // Save state
     localStorage.setItem('dap_last_channel', index);
     
-    titleOverlay.innerText = ch.name;
+    titleOverlay.innerText = (index + 1) + ". " + ch.name;
     titleOverlay.style.opacity = 1;
     setTimeout(() => { titleOverlay.style.opacity = 0; }, 2000);
 
@@ -468,7 +467,7 @@
   }
 
   function nav(direction) {
-    let currentIdx = channelsWithCategories.findIndex(c => c.name === display.innerText);
+    let currentIdx = parseInt(localStorage.getItem('dap_last_channel')) || 0;
     currentIdx = (currentIdx + direction + channelsWithCategories.length) % channelsWithCategories.length;
     playChannel(currentIdx);
   }
@@ -479,12 +478,12 @@
       } else {
           const btn = document.createElement('button'); btn.className = 'btn';
           const flatIdx = channelsWithCategories.findIndex(c => c.name === item.name);
-          btn.id = 'channel-' + flatIdx; btn.innerText = item.name;
+          btn.id = 'channel-' + flatIdx; 
+          btn.innerText = (flatIdx + 1) + ". " + item.name;
           btn.onclick = () => playChannel(flatIdx); list.appendChild(btn);
       }
   });
   
-  // Load saved channel or default to 0
   const savedChannel = localStorage.getItem('dap_last_channel');
   playChannel(savedChannel !== null ? parseInt(savedChannel) : 0);
 </script>
