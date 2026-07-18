@@ -11,7 +11,6 @@
     
     .video-container { position: relative; width: 100%; aspect-ratio: 16/9; background: #000; overflow: hidden; }
     .video-js { width: 100% !important; height: 100% !important; }
-    .video-js .vjs-poster { background-size: contain; background-color: #000; }
     
     #category-badge {
         position: absolute; top: 10px; left: 10px; z-index: 2147483647;
@@ -77,13 +76,10 @@
 
 <script src="https://vjs.zencdn.net/8.10.0/video.min.js"></script>
 <script>
-  // Logo URL for the poster
-  const LOGO_URL = "https://i.imgur.com/k91J1oZ.png"; // Replace with your direct image link if needed
-
+  // Initializing Player (Poster removed for cleaner performance)
   const player = videojs('player', { 
     autoplay: true, 
     muted: true, 
-    poster: LOGO_URL,
     controlBar: { volumePanel: { inline: false, vertical: true } } 
   });
   
