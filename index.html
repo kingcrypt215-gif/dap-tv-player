@@ -11,6 +11,7 @@
     
     .video-container { position: relative; width: 100%; aspect-ratio: 16/9; background: #000; overflow: hidden; }
     .video-js { width: 100% !important; height: 100% !important; }
+    .video-js .vjs-poster { background-size: contain; background-color: #000; }
     
     #category-badge {
         position: absolute; top: 10px; left: 10px; z-index: 2147483647;
@@ -47,7 +48,6 @@
     .btn.active, .btn:focus { background: #FFD700 !important; color: #000 !important; font-weight: bold; outline: none; }
     .section-header { background: #000; color: #FFD700; padding: 12px; font-size: 14px; font-weight: bold; text-transform: uppercase; border-bottom: 2px solid #FFD700; border-top: 2px solid #FFD700; }
     
-    /* Focus Styles for TV Remotes */
     .btn:focus { box-shadow: inset 0 0 0 3px #FFF; outline: none; }
     #search-bar:focus { outline: 3px solid #FFD700; }
     .vjs-control:focus { background-color: rgba(255, 215, 0, 0.4) !important; outline: 2px solid #FFD700 !important; }
@@ -77,9 +77,26 @@
 
 <script src="https://vjs.zencdn.net/8.10.0/video.min.js"></script>
 <script>
-  const player = videojs('player', { autoplay: true, muted: true, controlBar: { volumePanel: { inline: false, vertical: true } } });
+  // Logo URL for the poster
+  const LOGO_URL = "https://i.imgur.com/k91J1oZ.png"; // Replace with your direct image link if needed
+
+  const player = videojs('player', { 
+    autoplay: true, 
+    muted: true, 
+    poster: LOGO_URL,
+    controlBar: { volumePanel: { inline: false, vertical: true } } 
+  });
   
-  player.on('error', function() { console.error("Stream Error."); nav(1); });
+  let retryCount = 0;
+  player.on('error', function() { 
+    if (retryCount < 2) {
+      retryCount++;
+      player.load();
+    } else {
+      retryCount = 0;
+      nav(1);
+    }
+  });
 
   player.on('fullscreenchange', function() {
     const wrapper = document.getElementById('player-wrapper');
@@ -493,14 +510,6 @@
     if (e.key === "ArrowUp" || e.key === "ArrowLeft") { e.preventDefault(); nav(-1); }
     if (e.key === "ArrowDown" || e.key === "ArrowRight") { e.preventDefault(); nav(1); }
     if (e.key === "Enter") document.activeElement.click();
-  });
-
-  document.getElementById('search-bar').addEventListener('keydown', (e) => {
-      if (e.key === "ArrowDown" || e.key === "ArrowRight") {
-          e.preventDefault();
-          const firstChannel = document.querySelector('.btn');
-          if (firstChannel) firstChannel.focus();
-      }
   });
 
   channelData.forEach((item, index) => {
