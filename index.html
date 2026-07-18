@@ -46,6 +46,11 @@
     .btn { display: block; width: 100%; padding: 14px; border: none; background: #222; color: #fff; text-align: left; cursor: pointer; border-bottom: 1px solid #444; transition: 0.2s; }
     .btn.active, .btn:focus { background: #FFD700 !important; color: #000 !important; font-weight: bold; outline: none; }
     .section-header { background: #000; color: #FFD700; padding: 12px; font-size: 14px; font-weight: bold; text-transform: uppercase; border-bottom: 2px solid #FFD700; border-top: 2px solid #FFD700; }
+    
+    /* Focus Styles for TV Remotes */
+    .btn:focus { box-shadow: inset 0 0 0 3px #FFF; outline: none; }
+    #search-bar:focus { outline: 3px solid #FFD700; }
+    .vjs-control:focus { background-color: rgba(255, 215, 0, 0.4) !important; outline: 2px solid #FFD700 !important; }
   </style>
 </head>
 <body>
@@ -74,11 +79,7 @@
 <script>
   const player = videojs('player', { autoplay: true, muted: true, controlBar: { volumePanel: { inline: false, vertical: true } } });
   
-  // Error Handling
-  player.on('error', function() {
-      console.error("Stream Error detected.");
-      nav(1);
-  });
+  player.on('error', function() { console.error("Stream Error."); nav(1); });
 
   player.on('fullscreenchange', function() {
     const wrapper = document.getElementById('player-wrapper');
@@ -489,9 +490,17 @@
   }
 
   document.addEventListener('keydown', (e) => {
-    if (e.key === "ArrowUp") { e.preventDefault(); nav(-1); }
-    if (e.key === "ArrowDown") { e.preventDefault(); nav(1); }
+    if (e.key === "ArrowUp" || e.key === "ArrowLeft") { e.preventDefault(); nav(-1); }
+    if (e.key === "ArrowDown" || e.key === "ArrowRight") { e.preventDefault(); nav(1); }
     if (e.key === "Enter") document.activeElement.click();
+  });
+
+  document.getElementById('search-bar').addEventListener('keydown', (e) => {
+      if (e.key === "ArrowDown" || e.key === "ArrowRight") {
+          e.preventDefault();
+          const firstChannel = document.querySelector('.btn');
+          if (firstChannel) firstChannel.focus();
+      }
   });
 
   channelData.forEach((item, index) => {
