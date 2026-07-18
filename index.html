@@ -13,13 +13,20 @@
     .video-container { position: relative; width: 100%; aspect-ratio: 16/9; background: #000; flex: 0 0 auto; }
     .video-js { width: 100% !important; height: 100% !important; }
     
-    /* Overlay elements */
-    #category-badge { position: absolute; top: 10px; left: 10px; z-index: 100; color: #FFD700; background: rgba(0,0,0,0.5); padding: 5px 10px; font-size: 14px; font-weight: bold; text-transform: uppercase; pointer-events: none; }
-    #fs-channel-title { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 100; color: #FFD700; font-size: 24px; font-weight: bold; text-shadow: 2px 2px 8px #000; opacity: 0; transition: opacity 0.5s; pointer-events: none; text-align: center; }
+    /* Persistent Category Badge */
+    #category-badge { position: absolute; top: 15px; left: 15px; z-index: 100; color: #FFD700; font-size: 14px; font-weight: bold; text-transform: uppercase; text-shadow: 1px 1px 2px #000; pointer-events: none; }
     
-    .fs-nav { position: absolute; bottom: 10%; left: 50%; transform: translateX(-50%); z-index: 100; display: flex; gap: 20px; opacity: 1; }
-    .fs-btn { background: #FFD700 !important; color: #000 !important; border: none; padding: 10px 20px; cursor: pointer; font-weight: bold; font-size: 18px; border-radius: 4px; }
+    /* Channel Title Overlay (Fades on every change) */
+    #fs-channel-title { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 100; color: #FFD700; font-size: 24px; font-weight: bold; text-shadow: 2px 2px 8px #000; opacity: 0; transition: opacity 0.5s; pointer-events: none; text-align: center; white-space: nowrap; }
     
+    /* Fullscreen-only Nav (Fades on interaction) */
+    .fs-nav { position: absolute; bottom: 80px; left: 50%; transform: translateX(-50%); z-index: 100; display: none; gap: 20px; opacity: 0; transition: opacity 0.3s; }
+    .vjs-fullscreen .fs-nav { display: flex; }
+    .vjs-user-active .fs-nav { opacity: 1; }
+    
+    .fs-btn { background: rgba(0,0,0,0.6) !important; color: #FFD700 !important; border: 1px solid #FFD700 !important; padding: 10px 20px; cursor: pointer; font-weight: bold; font-size: 16px; border-radius: 4px; }
+    
+    /* Original Nav Box (Fixed Position) */
     .nav-box { display: flex; justify-content: space-between; padding: 10px; flex: 0 0 auto; }
     .nav-btn { background: #FFD700; color: #000; border: none; padding: 10px 20px; cursor: pointer; font-weight: bold; font-size: 16px; }
     
@@ -36,7 +43,7 @@
   <div id="brand">D.A.P TV LIVE</div>
   <div id="channel-display">Select a Channel</div>
   <div id="player-wrapper" class="video-container">
-    <div id="category-badge">Loading...</div>
+    <div id="category-badge"></div>
     <div id="fs-channel-title"></div>
     <div class="fs-nav">
         <button class="fs-btn" onclick="nav(-1)">PREV</button>
@@ -57,8 +64,31 @@
   const player = videojs('player', { autoplay: true, muted: true });
   const display = document.getElementById('channel-display'), 
         badge = document.getElementById('category-badge'), 
-        titleOverlay = document.getElementById('fs-channel-title'), 
+        titleOverlay = document.getElementById('fs-channel-title'),
         list = document.getElementById('ch-list');
+
+  function playChannel(index) {
+    const ch = flatChannels[index];
+    player.src({src: ch.url, type: 'application/x-mpegURL'});
+    player.play();
+    
+    display.innerText = (index + 1) + ". " + ch.name;
+    badge.innerText = ch.category;
+    
+    titleOverlay.innerText = (index + 1) + ". " + ch.name;
+    titleOverlay.style.opacity = 1;
+    setTimeout(() => { titleOverlay.style.opacity = 0; }, 2000);
+    
+    localStorage.setItem('dap_last_channel', index);
+    document.querySelectorAll('.btn').forEach(btn => btn.classList.remove('active'));
+    document.getElementById('channel-' + index)?.classList.add('active');
+  }
+
+  function nav(direction) {
+    let currentIdx = parseInt(localStorage.getItem('dap_last_channel')) || 0;
+    currentIdx = (currentIdx + direction + flatChannels.length) % flatChannels.length;
+    playChannel(currentIdx);
+  }
 
   const channelData = [
     { type: "header", name: "D.A.P's entrepreneur & Money" },
@@ -420,26 +450,6 @@
       btn.onclick = () => playChannel(idx); list.appendChild(btn);
     }
   });
-
-  function playChannel(index) {
-    const ch = flatChannels[index];
-    player.src({src: ch.url, type: 'application/x-mpegURL'});
-    player.play();
-    display.innerText = (index + 1) + ". " + ch.name;
-    badge.innerText = ch.category;
-    localStorage.setItem('dap_last_channel', index);
-    titleOverlay.innerText = ch.name;
-    titleOverlay.style.opacity = 1;
-    setTimeout(() => { titleOverlay.style.opacity = 0; }, 2000);
-    document.querySelectorAll('.btn').forEach(btn => btn.classList.remove('active'));
-    document.getElementById('channel-' + index)?.classList.add('active');
-  }
-
-  function nav(direction) {
-    let currentIdx = parseInt(localStorage.getItem('dap_last_channel')) || 0;
-    currentIdx = (currentIdx + direction + flatChannels.length) % flatChannels.length;
-    playChannel(currentIdx);
-  }
 
   const savedChannel = parseInt(localStorage.getItem('dap_last_channel')) || 0;
   playChannel(savedChannel);
