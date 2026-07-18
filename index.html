@@ -18,6 +18,13 @@
         text-transform: uppercase; text-shadow: 2px 2px 4px #000;
         pointer-events: none;
     }
+
+    #fs-channel-title {
+        position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+        z-index: 2147483646; color: #FFD700; font-size: 32px; font-weight: bold;
+        text-shadow: 2px 2px 8px #000; opacity: 0; transition: opacity 0.5s;
+        pointer-events: none; text-align: center; white-space: nowrap;
+    }
     
     .vjs-fullscreen #category-badge { display: block !important; }
     
@@ -27,6 +34,7 @@
     }
     .vjs-fullscreen .fs-nav { display: flex; }
     .vjs-user-active .fs-nav { opacity: 1; }
+    
     .fs-btn { background: #FFD700; color: #000; border: none; padding: 8px 16px; cursor: pointer; font-weight: bold; font-size: 14px; border-radius: 4px; }
 
     .nav-box { display: flex; justify-content: space-between; padding: 10px; }
@@ -44,6 +52,7 @@
 <div id="channel-display">Select a Channel</div>
 <div id="player-wrapper" class="video-container">
   <div id="category-badge">Category</div>
+  <div id="fs-channel-title">Channel Name</div>
   <div class="fs-nav">
       <button class="fs-btn" onclick="nav(-1)">PREV</button>
       <button class="fs-btn" onclick="nav(1)">NEXT</button>
@@ -68,19 +77,23 @@
   player.on('fullscreenchange', function() {
     const wrapper = document.getElementById('player-wrapper');
     const badge = document.getElementById('category-badge');
+    const titleOverlay = document.getElementById('fs-channel-title');
     const fsNav = document.querySelector('.fs-nav');
     
     if (player.isFullscreen()) {
         player.el().appendChild(badge);
+        player.el().appendChild(titleOverlay);
         player.el().appendChild(fsNav);
     } else {
         wrapper.appendChild(badge);
+        wrapper.appendChild(titleOverlay);
         wrapper.appendChild(fsNav);
     }
   });
 
   const display = document.getElementById('channel-display');
   const badge = document.getElementById('category-badge');
+  const titleOverlay = document.getElementById('fs-channel-title');
   const list = document.getElementById('ch-list');
   let channelsWithCategories = [];
   
@@ -429,7 +442,6 @@
     { name: "Jewish Life TV", url: "https://a-cdn.klowdtv.com/live3/jltv_720p/playlist.m3u8" }
   ];
 
-  let currentCategory = "";
   channelData.forEach(item => {
       if (item.type === "header") currentCategory = item.name;
       else channelsWithCategories.push({ ...item, category: currentCategory });
@@ -441,6 +453,11 @@
     player.play();
     display.innerText = ch.name;
     badge.innerText = ch.category; 
+    
+    titleOverlay.innerText = ch.name;
+    titleOverlay.style.opacity = 1;
+    setTimeout(() => { titleOverlay.style.opacity = 0; }, 2000);
+
     document.querySelectorAll('.btn').forEach(btn => btn.classList.remove('active'));
     document.getElementById('channel-' + index)?.classList.add('active');
   }
