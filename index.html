@@ -28,15 +28,16 @@
         font-size: clamp(14px, 5vw, 28px);
     }
     
-    .fs-nav { 
-        position: absolute; bottom: 80px; left: 50%; transform: translateX(-50%); 
-        z-index: 2147483647; display: flex; gap: 10px; 
-        opacity: 0; transition: opacity 0.3s ease-in-out; 
-        pointer-events: none; 
-    }
-    .fs-nav.visible { opacity: 1; pointer-events: auto; }
+    .vjs-fullscreen #category-badge { display: block !important; }
     
-    .fs-btn { background: #FFD700 !important; color: #000 !important; border: none; padding: 15px 30px; cursor: pointer; font-weight: bold; border-radius: 4px; font-size: 16px; }
+    .fs-nav { 
+        position: absolute; bottom: 50px; left: 50%; transform: translateX(-50%); 
+        z-index: 2147483647; display: none; gap: 10px; opacity: 0; transition: opacity 0.3s; 
+    }
+    .vjs-fullscreen .fs-nav { display: flex; }
+    .vjs-user-active .fs-nav { opacity: 1; }
+    
+    .fs-btn { background: #FFD700 !important; color: #000 !important; border: none; padding: 10px 20px; cursor: pointer; font-weight: bold; border-radius: 4px; }
 
     .nav-box { display: flex; justify-content: space-between; padding: 10px; }
     .nav-btn { background: #FFD700; color: #000; border: none; padding: 12px 24px; cursor: pointer; font-weight: bold; }
@@ -46,6 +47,7 @@
     .btn.active, .btn:focus { background: #FFD700 !important; color: #000 !important; font-weight: bold; outline: none; }
     .section-header { background: #000; color: #FFD700; padding: 12px; font-size: 14px; font-weight: bold; text-transform: uppercase; border-bottom: 2px solid #FFD700; border-top: 2px solid #FFD700; }
     
+    /* Focus Styles for TV Remotes */
     .btn:focus { box-shadow: inset 0 0 0 3px #FFF; outline: none; }
     #search-bar:focus { outline: 3px solid #FFD700; }
     .vjs-control:focus { background-color: rgba(255, 215, 0, 0.4) !important; outline: 2px solid #FFD700 !important; }
@@ -59,8 +61,8 @@
   <div id="category-badge">Category</div>
   <div id="fs-channel-title">Channel Name</div>
   <div class="fs-nav">
-      <button class="fs-btn" tabindex="0" onclick="nav(-1)">PREV</button>
-      <button class="fs-btn" tabindex="0" onclick="nav(1)">NEXT</button>
+      <button class="fs-btn" onclick="nav(-1)">PREV</button>
+      <button class="fs-btn" onclick="nav(1)">NEXT</button>
   </div>
   <video id="player" class="video-js vjs-default-skin" controls playsinline></video>
 </div>
@@ -80,11 +82,18 @@
   player.on('error', function() { console.error("Stream Error."); nav(1); });
 
   player.on('fullscreenchange', function() {
+    const wrapper = document.getElementById('player-wrapper');
+    const badge = document.getElementById('category-badge');
+    const titleOverlay = document.getElementById('fs-channel-title');
     const fsNav = document.querySelector('.fs-nav');
     if (player.isFullscreen()) {
+        player.el().appendChild(badge);
+        player.el().appendChild(titleOverlay);
         player.el().appendChild(fsNav);
     } else {
-        document.getElementById('player-wrapper').appendChild(fsNav);
+        wrapper.appendChild(badge);
+        wrapper.appendChild(titleOverlay);
+        wrapper.appendChild(fsNav);
     }
   });
 
@@ -444,13 +453,6 @@
       else channelsWithCategories.push({ ...item, category: currentCategory });
   });
 
-  function showFsNav() {
-      const fsNav = document.querySelector('.fs-nav');
-      fsNav.classList.add('visible');
-      clearTimeout(window.fsNavTimer);
-      window.fsNavTimer = setTimeout(() => { fsNav.classList.remove('visible'); }, 2000);
-  }
-
   function playChannel(index) {
     const ch = channelsWithCategories[index];
     player.src({src: ch.url, type: 'application/x-mpegURL'});
@@ -465,6 +467,7 @@
 
     const activeBtn = document.getElementById('channel-' + index);
     document.querySelectorAll('.btn').forEach(btn => btn.classList.remove('active'));
+    
     if (activeBtn) {
         activeBtn.classList.add('active');
         activeBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -487,19 +490,9 @@
   }
 
   document.addEventListener('keydown', (e) => {
-    let direction = 0;
-    if (e.key === "ArrowUp" || e.key === "ArrowLeft") direction = -1;
-    if (e.key === "ArrowDown" || e.key === "ArrowRight") direction = 1;
-
-    if (direction !== 0) {
-        e.preventDefault();
-        nav(direction);
-        if (player.isFullscreen()) showFsNav();
-    }
-
-    if (e.key === "Enter" && document.activeElement.tagName !== 'INPUT') {
-        document.activeElement.click();
-    }
+    if (e.key === "ArrowUp" || e.key === "ArrowLeft") { e.preventDefault(); nav(-1); }
+    if (e.key === "ArrowDown" || e.key === "ArrowRight") { e.preventDefault(); nav(1); }
+    if (e.key === "Enter") document.activeElement.click();
   });
 
   document.getElementById('search-bar').addEventListener('keydown', (e) => {
