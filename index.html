@@ -6,23 +6,29 @@
   <style>
     body { background: #000; color: #fff; font-family: sans-serif; margin: 0; overflow-x: hidden; }
     
-    /* Branding: Stays on main screen, NOT in full-screen */
     #brand { text-align: center; color: #FFD700; font-size: 24px; font-weight: bold; padding: 10px; }
     #channel-display { text-align: center; color: #FFD700; background: #000; padding: 8px; font-weight: bold; font-size: 18px; border-bottom: 2px solid #FFD700; }
     
     .video-container { position: relative; width: 100%; aspect-ratio: 16/9; background: #000; overflow: hidden; }
     .video-js { width: 100% !important; height: 100% !important; }
     
-    /* Category Badge: Travels to full-screen */
+    /* Force Category Badge to stay on top in full-screen */
     #category-badge {
-        position: absolute; top: 10px; left: 10px; z-index: 10;
-        background: rgba(0,0,0,0.5); color: #FFD700;
-        padding: 5px 10px; font-size: 14px; font-weight: bold;
-        pointer-events: none; text-transform: uppercase;
+        position: absolute !important; 
+        top: 10px !important; 
+        left: 10px !important; 
+        z-index: 2147483647 !important; 
+        background: rgba(0,0,0,0.5); 
+        color: #FFD700;
+        padding: 5px 10px; 
+        font-size: 14px; 
+        font-weight: bold;
+        pointer-events: none; 
+        text-transform: uppercase;
         text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+        display: block !important;
     }
 
-    /* Fullscreen-only Nav: Travels to full-screen, appears when active */
     .fs-nav { 
         position: absolute; bottom: 50px; left: 50%; transform: translateX(-50%); 
         z-index: 15; display: none; gap: 10px; opacity: 0; transition: opacity 0.3s; 
@@ -31,7 +37,6 @@
     .video-container:fullscreen.vjs-user-active .fs-nav { opacity: 1; }
     .fs-btn { background: #FFD700; color: #000; border: none; padding: 8px 16px; cursor: pointer; font-weight: bold; }
 
-    /* Static bottom nav (main screen only) */
     .nav-box { display: flex; justify-content: space-between; padding: 10px; gap: 5px; }
     .nav-btn { background: #FFD700; color: #000; border: none; padding: 10px; cursor: pointer; font-weight: bold; flex: 1; }
     
@@ -76,7 +81,6 @@
   });
 
   let channelsWithCategories = [];
-  
   const channelData = [
     { type: "header", name: "D.A.P's Entrepreneur & Money" },
     { name: "Entrepreneur TV", url: "https://cineverse-entrepreneurtv-entrepreneurtv-1-us.ono.wurl.tv/playlist.m3u8" },
