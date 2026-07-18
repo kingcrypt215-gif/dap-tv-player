@@ -482,7 +482,11 @@
   function playChannel(index) {
     const ch = channelsWithCategories[index];
     gtag('event', 'channel_view', { 'channel_name': ch.name });
-    requestSystemFullscreen();
+
+    if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+        requestSystemFullscreen();
+    }
+    
     player.src({src: ch.url, type: 'application/x-mpegURL'});
     player.play();
     display.innerText = (index + 1) + ". " + ch.name;
