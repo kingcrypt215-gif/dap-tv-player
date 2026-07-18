@@ -3,7 +3,18 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <link rel="manifest" href="manifest.json">
   <link href="https://vjs.zencdn.net/8.10.0/video-js.css" rel="stylesheet" />
+  
+  <!-- Google Analytics Tag -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-XXXXXXXXXX');
+  </script>
+
   <style>
     body { background: #000; color: #fff; font-family: sans-serif; margin: 0; overflow-x: hidden; }
     #brand { text-align: center; color: #FFD700; font-size: clamp(18px, 4vw, 24px); font-weight: bold; padding: 10px; }
@@ -76,7 +87,9 @@
 
 <script src="https://vjs.zencdn.net/8.10.0/video.min.js"></script>
 <script>
-  // Initializing Player (Poster removed for cleaner performance)
+  // Register Service Worker for App Feel
+  if ('serviceWorker' in navigator) { navigator.serviceWorker.register('./sw.js'); }
+
   const player = videojs('player', { 
     autoplay: true, 
     muted: true, 
@@ -85,13 +98,8 @@
   
   let retryCount = 0;
   player.on('error', function() { 
-    if (retryCount < 2) {
-      retryCount++;
-      player.load();
-    } else {
-      retryCount = 0;
-      nav(1);
-    }
+    if (retryCount < 2) { retryCount++; player.load(); } 
+    else { retryCount = 0; nav(1); }
   });
 
   player.on('fullscreenchange', function() {
@@ -468,6 +476,9 @@
 
   function playChannel(index) {
     const ch = channelsWithCategories[index];
+    // Track Analytics
+    gtag('event', 'channel_view', { 'channel_name': ch.name });
+    
     player.src({src: ch.url, type: 'application/x-mpegURL'});
     player.play();
     display.innerText = (index + 1) + ". " + ch.name;
