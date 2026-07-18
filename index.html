@@ -67,12 +67,19 @@
   <button class="nav-btn" onclick="nav(1)">NEXT</button>
 </div>
 
+<input type="text" id="search-bar" placeholder="Search Channels..." onkeyup="filterChannels()" style="width: 100%; padding: 10px; box-sizing: border-box; background: #222; color: #FFD700; border: 1px solid #444; border-top: 2px solid #FFD700;">
 <div id="ch-list" tabindex="0"></div>
 
 <script src="https://vjs.zencdn.net/8.10.0/video.min.js"></script>
 <script>
   const player = videojs('player', { autoplay: true, muted: true, controlBar: { volumePanel: { inline: false, vertical: true } } });
   
+  // Error Handling
+  player.on('error', function() {
+      console.error("Stream Error detected.");
+      nav(1);
+  });
+
   player.on('fullscreenchange', function() {
     const wrapper = document.getElementById('player-wrapper');
     const badge = document.getElementById('category-badge');
@@ -459,14 +466,26 @@
 
     const activeBtn = document.getElementById('channel-' + index);
     document.querySelectorAll('.btn').forEach(btn => btn.classList.remove('active'));
-    activeBtn?.classList.add('active');
-    activeBtn?.focus(); 
+    
+    if (activeBtn) {
+        activeBtn.classList.add('active');
+        activeBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
   }
 
   function nav(direction) {
     let currentIdx = parseInt(localStorage.getItem('dap_last_channel')) || 0;
     currentIdx = (currentIdx + direction + channelsWithCategories.length) % channelsWithCategories.length;
     playChannel(currentIdx);
+  }
+
+  function filterChannels() {
+    const filter = document.getElementById('search-bar').value.toUpperCase();
+    const items = document.querySelectorAll('.btn, .section-header');
+    items.forEach(item => {
+        const text = item.innerText.toUpperCase();
+        item.style.display = text.indexOf(filter) > -1 ? "" : "none";
+    });
   }
 
   document.addEventListener('keydown', (e) => {
