@@ -4,7 +4,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
   <link href="https://vjs.zencdn.net/8.10.0/video-js.css" rel="stylesheet" />
   <style>
-    body { background: #000; color: #fff; font-family: sans-serif; margin: 0; outline: none; }
+    body { background: #000; color: #fff; font-family: sans-serif; margin: 0; }
     #brand { text-align: center; color: #FFD700; font-size: 24px; font-weight: bold; padding: 10px; }
     #channel-display { text-align: center; color: #FFD700; background: #000; padding: 8px; font-weight: bold; font-size: 18px; border-bottom: 2px solid #FFD700; }
     
@@ -12,45 +12,47 @@
     .video-js { width: 100% !important; height: 100% !important; }
     
     #category-badge {
-        position: absolute; top: 10px; left: 10px; z-index: 999999;
-        background: rgba(0,0,0,0.6); color: #FFD700;
+        position: absolute; top: 10px; left: 10px; z-index: 2147483647;
+        background: transparent !important; color: #FFD700;
         padding: 5px 10px; font-size: 14px; font-weight: bold;
-        text-transform: uppercase; pointer-events: none;
+        text-transform: uppercase; text-shadow: 2px 2px 4px #000;
+        pointer-events: none;
     }
 
     #fs-channel-title {
         position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-        z-index: 999999; color: #FFD700; font-weight: bold;
+        z-index: 2147483646; color: #FFD700; font-weight: bold;
         text-shadow: 2px 2px 8px #000; opacity: 0; transition: opacity 0.5s;
         pointer-events: none; text-align: center;
-        width: 90%; white-space: nowrap;
+        width: 90%;
+        white-space: nowrap;
         font-size: clamp(14px, 5vw, 28px);
     }
     
+    .vjs-fullscreen #category-badge { display: block !important; }
+    
     .fs-nav { 
-        position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); 
-        z-index: 999999; display: flex; gap: 10px; opacity: 0; transition: opacity 0.3s; 
+        position: absolute; bottom: 50px; left: 50%; transform: translateX(-50%); 
+        z-index: 2147483647; display: none; gap: 10px; opacity: 0; transition: opacity 0.3s; 
     }
+    .vjs-fullscreen .fs-nav { display: flex; }
     .vjs-user-active .fs-nav { opacity: 1; }
     
-    .fs-btn { background: #FFD700 !important; color: #000 !important; border: none; padding: 10px 20px; cursor: pointer; font-weight: bold; font-size: 14px; border-radius: 4px; }
-    
-    .nav-box { display: flex; justify-content: space-between; padding: 15px; }
-    .nav-btn { background: #FFD700; color: #000; border: none; padding: 12px 24px; cursor: pointer; font-weight: bold; font-size: 16px; }
-    
-    #ch-list { height: 40vh; overflow-y: auto; background: #111; border-top: 2px solid #FFD700; }
-    .btn { display: block; width: 100%; padding: 16px; border: none; background: #222; color: #fff; text-align: left; cursor: pointer; border-bottom: 1px solid #444; font-size: 16px; }
-    .btn:focus, .btn.active { background: #FFD700 !important; color: #000 !important; font-weight: bold; outline: none; }
-    .section-header { background: #000; color: #FFD700; padding: 12px; font-size: 16px; font-weight: bold; text-transform: uppercase; border-bottom: 2px solid #FFD700; border-top: 2px solid #FFD700; }
-    
-    #ad-container { width: 100%; background: #000; text-align: center; padding: 10px 0; min-height: 50px; }
+    .fs-btn { background: #FFD700 !important; color: #000 !important; border: none; padding: 8px 16px; cursor: pointer; font-weight: bold; font-size: 14px; border-radius: 4px; }
+
+    .nav-box { display: flex; justify-content: space-between; padding: 10px; }
+    .nav-btn { background: #FFD700; color: #000; border: none; padding: 10px 20px; cursor: pointer; font-weight: bold; }
+    #ch-list { height: 350px; overflow-y: auto; background: #111; }
+    .btn { display: block; width: 100%; padding: 12px; border: none; background: #222; color: #fff; text-align: left; cursor: pointer; border-bottom: 1px solid #444; }
+    .btn.active { background: #FFD700 !important; color: #000 !important; font-weight: bold; }
+    .btn:hover { background: #333; }
+    .section-header { background: #000; color: #FFD700; padding: 10px; font-size: 14px; font-weight: bold; text-transform: uppercase; border-bottom: 2px solid #FFD700; border-top: 2px solid #FFD700; }
   </style>
 </head>
 <body>
 
 <div id="brand">D.A.P TV LIVE</div>
 <div id="channel-display">Select a Channel</div>
-
 <div id="player-wrapper" class="video-container">
   <div id="category-badge">Category</div>
   <div id="fs-channel-title">Channel Name</div>
@@ -67,16 +69,30 @@
 </div>
 
 <div id="ch-list"></div>
-<div id="ad-container"></div>
 
 <script src="https://vjs.zencdn.net/8.10.0/video.min.js"></script>
 <script>
-  const player = videojs('player', { autoplay: true, muted: true });
+  const player = videojs('player', {
+    autoplay: true,
+    muted: true,
+    controlBar: { volumePanel: { inline: false, vertical: true } }
+  });
 
-  document.addEventListener('keydown', (e) => {
-    if (e.key === "ArrowUp") nav(-1);
-    if (e.key === "ArrowDown") nav(1);
-    if (e.key === "Enter") document.activeElement.click();
+  player.on('fullscreenchange', function() {
+    const wrapper = document.getElementById('player-wrapper');
+    const badge = document.getElementById('category-badge');
+    const titleOverlay = document.getElementById('fs-channel-title');
+    const fsNav = document.querySelector('.fs-nav');
+    
+    if (player.isFullscreen()) {
+        player.el().appendChild(badge);
+        player.el().appendChild(titleOverlay);
+        player.el().appendChild(fsNav);
+    } else {
+        wrapper.appendChild(badge);
+        wrapper.appendChild(titleOverlay);
+        wrapper.appendChild(fsNav);
+    }
   });
 
   const display = document.getElementById('channel-display');
@@ -86,7 +102,7 @@
   let channelsWithCategories = [];
   
   const channelData = [
-    { type: "header", name: "D.A.P's Entrepreneur & Money" },
+    { type: "header", name: "D.A.P's entrepreneur & Money" },
     { name: "Entrepreneur TV", url: "https://cineverse-entrepreneurtv-entrepreneurtv-1-us.ono.wurl.tv/playlist.m3u8" },
     { name: "My Money", url: "https://dqaj8xog66lli.cloudfront.net/v1/master/9d062541f2ff39b5c0f48b743c6411d25f62fc25/DistroTV-MuxIP-MyMoney/468.m3u8" },
     { name: "CGTN Global Biz", url: "https://amg01314-amg01314c6-distrotv-us-10220.playouts.now.amagi.tv/playlist/amg01314-cgtn-cgtnglobalbiz-distrotvus/playlist.m3u8" },
@@ -430,9 +446,10 @@
     { name: "Jewish Life TV", url: "https://a-cdn.klowdtv.com/live3/jltv_720p/playlist.m3u8" }
   ];
 
+  let currentCategory = "";
   channelData.forEach(item => {
-    if (item.type === "header") currentCategory = item.name;
-    else channelsWithCategories.push({ ...item, category: currentCategory });
+      if (item.type === "header") currentCategory = item.name;
+      else channelsWithCategories.push({ ...item, category: currentCategory });
   });
 
   function playChannel(index) {
@@ -441,16 +458,15 @@
     player.play();
     display.innerText = (index + 1) + ". " + ch.name;
     badge.innerText = ch.category; 
+    
     localStorage.setItem('dap_last_channel', index);
     
     titleOverlay.innerText = (index + 1) + ". " + ch.name;
     titleOverlay.style.opacity = 1;
     setTimeout(() => { titleOverlay.style.opacity = 0; }, 2000);
-    
+
     document.querySelectorAll('.btn').forEach(btn => btn.classList.remove('active'));
-    const activeBtn = document.getElementById('channel-' + index);
-    activeBtn?.classList.add('active');
-    activeBtn?.focus(); 
+    document.getElementById('channel-' + index)?.classList.add('active');
   }
 
   function nav(direction) {
@@ -460,15 +476,15 @@
   }
 
   channelData.forEach((item, index) => {
-    if (item.type === "header") {
-      const h = document.createElement('div'); h.className = 'section-header'; h.innerText = item.name; list.appendChild(h);
-    } else {
-      const btn = document.createElement('button'); btn.className = 'btn';
-      const flatIdx = channelsWithCategories.findIndex(c => c.name === item.name);
-      btn.id = 'channel-' + flatIdx; 
-      btn.innerText = (flatIdx + 1) + ". " + item.name;
-      btn.onclick = () => playChannel(flatIdx); list.appendChild(btn);
-    }
+      if (item.type === "header") {
+          const h = document.createElement('div'); h.className = 'section-header'; h.innerText = item.name; list.appendChild(h);
+      } else {
+          const btn = document.createElement('button'); btn.className = 'btn';
+          const flatIdx = channelsWithCategories.findIndex(c => c.name === item.name);
+          btn.id = 'channel-' + flatIdx; 
+          btn.innerText = (flatIdx + 1) + ". " + item.name;
+          btn.onclick = () => playChannel(flatIdx); list.appendChild(btn);
+      }
   });
   
   const savedChannel = localStorage.getItem('dap_last_channel');
@@ -476,3 +492,4 @@
 </script>
 </body>
 </html>
+
