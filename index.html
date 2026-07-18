@@ -4,99 +4,69 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
   <link href="https://vjs.zencdn.net/8.10.0/video-js.css" rel="stylesheet" />
   <style>
-    body { background: #000; color: #fff; font-family: sans-serif; margin: 0; }
-    #brand { text-align: center; color: #FFD700; font-size: 24px; font-weight: bold; padding: 10px; }
-    #channel-display { text-align: center; color: #FFD700; background: #000; padding: 8px; font-weight: bold; font-size: 18px; border-bottom: 2px solid #FFD700; }
+    body { background: #000; color: #fff; font-family: sans-serif; margin: 0; overflow: hidden; height: 100vh; }
+    .app-wrapper { display: flex; flex-direction: column; height: 100vh; }
     
-    .video-container { position: relative; width: 100%; aspect-ratio: 16/9; background: #000; overflow: hidden; }
+    #brand { text-align: center; color: #FFD700; font-size: clamp(18px, 4vw, 24px); font-weight: bold; padding: 10px; flex: 0 0 auto; }
+    #channel-display { text-align: center; color: #FFD700; padding: 8px; border-bottom: 2px solid #FFD700; flex: 0 0 auto; font-size: 16px; }
+    
+    .video-container { position: relative; width: 100%; aspect-ratio: 16/9; background: #000; flex: 0 0 auto; overflow: hidden; }
     .video-js { width: 100% !important; height: 100% !important; }
     
-    #category-badge {
-        position: absolute; top: 10px; left: 10px; z-index: 2147483647;
-        background: transparent !important; color: #FFD700;
-        padding: 5px 10px; font-size: 14px; font-weight: bold;
-        text-transform: uppercase; text-shadow: 2px 2px 4px #000;
-        pointer-events: none;
+    #category-badge { position: absolute; top: 10px; left: 10px; z-index: 2147483647; background: transparent !important; color: #FFD700; padding: 5px 10px; font-size: 12px; font-weight: bold; text-transform: uppercase; text-shadow: 2px 2px 4px #000; pointer-events: none; }
+    #fs-channel-title { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 2147483646; color: #FFD700; font-size: 24px; font-weight: bold; text-shadow: 2px 2px 8px #000; opacity: 0; transition: opacity 0.5s; pointer-events: none; text-align: center; white-space: nowrap; }
+    
+    .nav-box { display: flex; justify-content: space-between; padding: 10px; flex: 0 0 auto; }
+    .nav-btn { background: #FFD700; color: #000; border: none; padding: 10px 20px; cursor: pointer; font-weight: bold; font-size: 16px; }
+    
+    /* Channel List Box - Fixed at 40% of screen height */
+    #ch-list { 
+      height: 40vh; 
+      overflow-y: auto; 
+      background: #111; 
+      border-top: 1px solid #333;
+      flex: 0 0 auto; 
     }
 
-    #fs-channel-title {
-        position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-        z-index: 2147483646; color: #FFD700; font-size: 32px; font-weight: bold;
-        text-shadow: 2px 2px 8px #000; opacity: 0; transition: opacity 0.5s;
-        pointer-events: none; text-align: center; white-space: nowrap;
+    /* Ad Container - Fills remaining space */
+    #ad-container { 
+      flex: 1; 
+      background: #000; 
+      display: flex; 
+      align-items: center; 
+      justify-content: center; 
+      border-top: 1px solid #FFD700;
     }
-    
-    .vjs-fullscreen #category-badge { display: block !important; }
-    
-    .fs-nav { 
-        position: absolute; bottom: 50px; left: 50%; transform: translateX(-50%); 
-        z-index: 2147483647; display: none; gap: 10px; opacity: 0; transition: opacity 0.3s; 
-    }
-    .vjs-fullscreen .fs-nav { display: flex; }
-    .vjs-user-active .fs-nav { opacity: 1; }
-    
-    .fs-btn { background: #FFD700 !important; color: #000 !important; border: none; padding: 8px 16px; cursor: pointer; font-weight: bold; font-size: 14px; border-radius: 4px; }
 
-    .nav-box { display: flex; justify-content: space-between; padding: 10px; }
-    .nav-btn { background: #FFD700; color: #000; border: none; padding: 10px 20px; cursor: pointer; font-weight: bold; }
-    #ch-list { height: 350px; overflow-y: auto; background: #111; }
-    .btn { display: block; width: 100%; padding: 12px; border: none; background: #222; color: #fff; text-align: left; cursor: pointer; border-bottom: 1px solid #444; }
+    .btn { display: block; width: 100%; padding: 15px; border: none; background: #222; color: #fff; text-align: left; cursor: pointer; border-bottom: 1px solid #444; font-size: 16px; }
     .btn.active { background: #FFD700 !important; color: #000 !important; font-weight: bold; }
     .btn:hover { background: #333; }
-    .section-header { background: #000; color: #FFD700; padding: 10px; font-size: 14px; font-weight: bold; text-transform: uppercase; border-bottom: 2px solid #FFD700; border-top: 2px solid #FFD700; }
+    .section-header { background: #000; color: #FFD700; padding: 12px; font-size: 14px; font-weight: bold; text-transform: uppercase; border-bottom: 2px solid #FFD700; border-top: 2px solid #FFD700; position: sticky; top: 0; z-index: 10; }
   </style>
 </head>
 <body>
-
-<div id="brand">D.A.P TV LIVE</div>
-<div id="channel-display">Select a Channel</div>
-<div id="player-wrapper" class="video-container">
-  <div id="category-badge">Category</div>
-  <div id="fs-channel-title">Channel Name</div>
-  <div class="fs-nav">
-      <button class="fs-btn" onclick="nav(-1)">PREV</button>
-      <button class="fs-btn" onclick="nav(1)">NEXT</button>
+<div class="app-wrapper">
+  <div id="brand">D.A.P TV LIVE</div>
+  <div id="channel-display">Select a Channel</div>
+  <div id="player-wrapper" class="video-container">
+    <div id="category-badge">Category</div>
+    <div id="fs-channel-title">Channel Name</div>
+    <video id="player" class="video-js vjs-default-skin" controls playsinline></video>
   </div>
-  <video id="player" class="video-js vjs-default-skin" controls playsinline></video>
+  <div class="nav-box">
+    <button class="nav-btn" onclick="nav(-1)">PREVIOUS</button>
+    <button class="nav-btn" onclick="nav(1)">NEXT</button>
+  </div>
+  <div id="ch-list"></div>
+  <div id="ad-container">
+    <!-- Place your Ad Code or Banner here -->
+    <p style="color: #666;">AD SPACE</p>
+  </div>
 </div>
-
-<div class="nav-box">
-  <button class="nav-btn" onclick="nav(-1)">PREVIOUS</button>
-  <button class="nav-btn" onclick="nav(1)">NEXT</button>
-</div>
-
-<div id="ch-list"></div>
-
 <script src="https://vjs.zencdn.net/8.10.0/video.min.js"></script>
 <script>
-  const player = videojs('player', {
-    autoplay: true,
-    muted: true,
-    controlBar: { volumePanel: { inline: false, vertical: true } }
-  });
-
-  player.on('fullscreenchange', function() {
-    const wrapper = document.getElementById('player-wrapper');
-    const badge = document.getElementById('category-badge');
-    const titleOverlay = document.getElementById('fs-channel-title');
-    const fsNav = document.querySelector('.fs-nav');
-    
-    if (player.isFullscreen()) {
-        player.el().appendChild(badge);
-        player.el().appendChild(titleOverlay);
-        player.el().appendChild(fsNav);
-    } else {
-        wrapper.appendChild(badge);
-        wrapper.appendChild(titleOverlay);
-        wrapper.appendChild(fsNav);
-    }
-  });
-
-  const display = document.getElementById('channel-display');
-  const badge = document.getElementById('category-badge');
-  const titleOverlay = document.getElementById('fs-channel-title');
-  const list = document.getElementById('ch-list');
-  let channelsWithCategories = [];
+  const player = videojs('player', { autoplay: true, muted: true });
+  const display = document.getElementById('channel-display'), badge = document.getElementById('category-badge'), titleOverlay = document.getElementById('fs-channel-title'), list = document.getElementById('ch-list');
   
   const channelData = [
     { type: "header", name: "D.A.P's entrepreneur & Money" },
@@ -443,47 +413,38 @@
     { name: "Jewish Life TV", url: "https://a-cdn.klowdtv.com/live3/jltv_720p/playlist.m3u8" }
   ];
 
-  let currentCategory = "";
-  channelData.forEach(item => {
-      if (item.type === "header") currentCategory = item.name;
-      else channelsWithCategories.push({ ...item, category: currentCategory });
+  let flatChannels = [];
+  channelData.forEach((item) => {
+    if (item.type === "header") {
+      const h = document.createElement('div'); h.className = 'section-header'; h.innerText = item.name; list.appendChild(h);
+    } else {
+      flatChannels.push(item);
+      const btn = document.createElement('button'); btn.className = 'btn';
+      const idx = flatChannels.length - 1;
+      btn.id = 'channel-' + idx; btn.innerText = (idx + 1) + ". " + item.name;
+      btn.onclick = () => playChannel(idx); list.appendChild(btn);
+    }
   });
 
   function playChannel(index) {
-    const ch = channelsWithCategories[index];
+    const ch = flatChannels[index];
     player.src({src: ch.url, type: 'application/x-mpegURL'});
     player.play();
     display.innerText = (index + 1) + ". " + ch.name;
-    badge.innerText = ch.category; 
-    
     localStorage.setItem('dap_last_channel', index);
-    
     titleOverlay.innerText = (index + 1) + ". " + ch.name;
     titleOverlay.style.opacity = 1;
     setTimeout(() => { titleOverlay.style.opacity = 0; }, 2000);
-
     document.querySelectorAll('.btn').forEach(btn => btn.classList.remove('active'));
     document.getElementById('channel-' + index)?.classList.add('active');
   }
 
   function nav(direction) {
     let currentIdx = parseInt(localStorage.getItem('dap_last_channel')) || 0;
-    currentIdx = (currentIdx + direction + channelsWithCategories.length) % channelsWithCategories.length;
+    currentIdx = (currentIdx + direction + flatChannels.length) % flatChannels.length;
     playChannel(currentIdx);
   }
 
-  channelData.forEach((item, index) => {
-      if (item.type === "header") {
-          const h = document.createElement('div'); h.className = 'section-header'; h.innerText = item.name; list.appendChild(h);
-      } else {
-          const btn = document.createElement('button'); btn.className = 'btn';
-          const flatIdx = channelsWithCategories.findIndex(c => c.name === item.name);
-          btn.id = 'channel-' + flatIdx; 
-          btn.innerText = (flatIdx + 1) + ". " + item.name;
-          btn.onclick = () => playChannel(flatIdx); list.appendChild(btn);
-      }
-  });
-  
   const savedChannel = localStorage.getItem('dap_last_channel');
   playChannel(savedChannel !== null ? parseInt(savedChannel) : 0);
 </script>
