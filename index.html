@@ -32,10 +32,10 @@
     
     .fs-nav { 
         position: absolute; bottom: 50px; left: 50%; transform: translateX(-50%); 
-        z-index: 2147483647; display: none; gap: 10px; opacity: 0; transition: opacity 0.3s; 
+        z-index: 2147483647; display: none; gap: 10px; 
+        opacity: 0; transition: opacity 0.3s ease-in-out; 
     }
     .vjs-fullscreen .fs-nav { display: flex; }
-    .vjs-user-active .fs-nav { opacity: 1; }
     
     .fs-btn { background: #FFD700 !important; color: #000 !important; border: none; padding: 10px 20px; cursor: pointer; font-weight: bold; border-radius: 4px; }
 
@@ -47,7 +47,7 @@
     .btn.active, .btn:focus { background: #FFD700 !important; color: #000 !important; font-weight: bold; outline: none; }
     .section-header { background: #000; color: #FFD700; padding: 12px; font-size: 14px; font-weight: bold; text-transform: uppercase; border-bottom: 2px solid #FFD700; border-top: 2px solid #FFD700; }
     
-    /* Focus Styles for TV Remotes */
+    /* Focus Styles */
     .btn:focus { box-shadow: inset 0 0 0 3px #FFF; outline: none; }
     #search-bar:focus { outline: 3px solid #FFD700; }
     .vjs-control:focus { background-color: rgba(255, 215, 0, 0.4) !important; outline: 2px solid #FFD700 !important; }
@@ -490,9 +490,24 @@
   }
 
   document.addEventListener('keydown', (e) => {
-    if (e.key === "ArrowUp" || e.key === "ArrowLeft") { e.preventDefault(); nav(-1); }
-    if (e.key === "ArrowDown" || e.key === "ArrowRight") { e.preventDefault(); nav(1); }
-    if (e.key === "Enter") document.activeElement.click();
+    let direction = 0;
+    if (e.key === "ArrowUp" || e.key === "ArrowLeft") direction = -1;
+    if (e.key === "ArrowDown" || e.key === "ArrowRight") direction = 1;
+
+    if (direction !== 0) {
+        e.preventDefault();
+        nav(direction);
+        if (player.isFullscreen()) {
+            player.userActive(true);
+            const fsNav = document.querySelector('.fs-nav');
+            fsNav.style.opacity = "1";
+            setTimeout(() => { fsNav.style.opacity = "0"; }, 2000);
+        }
+    }
+
+    if (e.key === "Enter" && document.activeElement.tagName !== 'INPUT') {
+        document.activeElement.click();
+    }
   });
 
   document.getElementById('search-bar').addEventListener('keydown', (e) => {
