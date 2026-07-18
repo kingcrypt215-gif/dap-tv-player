@@ -24,13 +24,12 @@
     .nav-box { display: flex; justify-content: space-between; padding: 10px; flex-shrink: 0; }
     .nav-btn { background: #FFD700; color: #000; border: none; padding: 10px 20px; cursor: pointer; font-weight: bold; font-size: 16px; }
     
-    /* Fixed scrollable box container */
-    #ch-list { flex-grow: 1; overflow-y: auto; background: #111; }
+    #ch-list { flex-grow: 1; overflow-y: auto; background: #111; border: 1px solid #333; }
     
     .btn { display: block; width: 100%; padding: 15px; border: none; background: #222; color: #fff; text-align: left; cursor: pointer; border-bottom: 1px solid #444; font-size: 16px; }
     .btn.active { background: #FFD700 !important; color: #000 !important; font-weight: bold; }
     .btn:hover { background: #333; }
-    .section-header { background: #000; color: #FFD700; padding: 12px; font-size: 14px; font-weight: bold; text-transform: uppercase; border-bottom: 2px solid #FFD700; border-top: 2px solid #FFD700; }
+    .section-header { background: #000; color: #FFD700; padding: 12px; font-size: 14px; font-weight: bold; text-transform: uppercase; border-bottom: 2px solid #FFD700; border-top: 2px solid #FFD700; position: sticky; top: 0; z-index: 10; }
   </style>
 </head>
 <body>
@@ -55,8 +54,8 @@
 <script src="https://vjs.zencdn.net/8.10.0/video.min.js"></script>
 <script>
   const player = videojs('player', { autoplay: true, muted: true, controlBar: { volumePanel: { inline: false, vertical: true } } });
+  const display = document.getElementById('channel-display'), badge = document.getElementById('category-badge'), titleOverlay = document.getElementById('fs-channel-title'), list = document.getElementById('ch-list');
   
-  // Keep your exact channel list order
   const channelData = [
     { type: "header", name: "D.A.P's entrepreneur & Money" },
     { name: "Entrepreneur TV", url: "https://cineverse-entrepreneurtv-entrepreneurtv-1-us.ono.wurl.tv/playlist.m3u8" },
@@ -402,13 +401,29 @@
     { name: "Jewish Life TV", url: "https://a-cdn.klowdtv.com/live3/jltv_720p/playlist.m3u8" }
   ];
 
-  // Logic to process channels into flat list
-  channelData.forEach(item => {
-    if (item.type !== "header") channelsWithCategories.push(item);
+  let flatChannels = [];
+  
+  // Initialize the list
+  channelData.forEach((item, index) => {
+    if (item.type === "header") {
+      const h = document.createElement('div');
+      h.className = 'section-header';
+      h.innerText = item.name;
+      list.appendChild(h);
+    } else {
+      flatChannels.push(item);
+      const btn = document.createElement('button');
+      btn.className = 'btn';
+      const channelIndex = flatChannels.length - 1;
+      btn.id = 'channel-' + channelIndex;
+      btn.innerText = (channelIndex + 1) + ". " + item.name;
+      btn.onclick = () => playChannel(channelIndex);
+      list.appendChild(btn);
+    }
   });
 
   function playChannel(index) {
-    const ch = channelsWithCategories[index];
+    const ch = flatChannels[index];
     player.src({src: ch.url, type: 'application/x-mpegURL'});
     player.play();
     display.innerText = (index + 1) + ". " + ch.name;
@@ -422,21 +437,10 @@
 
   function nav(direction) {
     let currentIdx = parseInt(localStorage.getItem('dap_last_channel')) || 0;
-    currentIdx = (currentIdx + direction + channelsWithCategories.length) % channelsWithCategories.length;
+    currentIdx = (currentIdx + direction + flatChannels.length) % flatChannels.length;
     playChannel(currentIdx);
   }
 
-  channelData.forEach((item, index) => {
-    if (item.type === "header") {
-      const h = document.createElement('div'); h.className = 'section-header'; h.innerText = item.name; list.appendChild(h);
-    } else {
-      const btn = document.createElement('button'); btn.className = 'btn';
-      const flatIdx = channelsWithCategories.findIndex(c => c.name === item.name);
-      btn.id = 'channel-' + flatIdx; btn.innerText = (flatIdx + 1) + ". " + item.name;
-      btn.onclick = () => playChannel(flatIdx); list.appendChild(btn);
-    }
-  });
-  
   const savedChannel = localStorage.getItem('dap_last_channel');
   playChannel(savedChannel !== null ? parseInt(savedChannel) : 0);
 </script>
