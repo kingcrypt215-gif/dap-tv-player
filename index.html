@@ -7,19 +7,18 @@
     body { background: #000; color: #fff; font-family: sans-serif; margin: 0; overflow: hidden; height: 100vh; }
     .app-wrapper { display: flex; flex-direction: column; height: 100vh; }
     
-    #brand { text-align: center; color: #FFD700; font-size: clamp(18px, 4vw, 24px); font-weight: bold; padding: 10px; flex: 0 0 auto; }
+    #brand { text-align: center; color: #FFD700; font-size: 20px; font-weight: bold; padding: 10px; flex: 0 0 auto; }
     #channel-display { text-align: center; color: #FFD700; padding: 8px; border-bottom: 2px solid #FFD700; flex: 0 0 auto; font-size: 16px; }
     
-    .video-container { position: relative; width: 100%; aspect-ratio: 16/9; background: #000; flex: 0 0 auto; overflow: hidden; }
+    .video-container { position: relative; width: 100%; aspect-ratio: 16/9; background: #000; flex: 0 0 auto; }
     .video-js { width: 100% !important; height: 100% !important; }
     
-    #category-badge { position: absolute; top: 10px; left: 10px; z-index: 2147483647; color: #FFD700; padding: 5px 10px; font-size: 14px; font-weight: bold; text-transform: uppercase; text-shadow: 2px 2px 4px #000; pointer-events: none; }
-    #fs-channel-title { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 2147483646; color: #FFD700; font-size: 24px; font-weight: bold; text-shadow: 2px 2px 8px #000; opacity: 0; transition: opacity 0.5s; pointer-events: none; text-align: center; }
+    /* Overlay elements */
+    #category-badge { position: absolute; top: 10px; left: 10px; z-index: 100; color: #FFD700; background: rgba(0,0,0,0.5); padding: 5px 10px; font-size: 14px; font-weight: bold; text-transform: uppercase; pointer-events: none; }
+    #fs-channel-title { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 100; color: #FFD700; font-size: 24px; font-weight: bold; text-shadow: 2px 2px 8px #000; opacity: 0; transition: opacity 0.5s; pointer-events: none; text-align: center; }
     
-    .fs-nav { position: absolute; bottom: 50px; left: 50%; transform: translateX(-50%); z-index: 2147483647; display: none; gap: 10px; opacity: 0; transition: opacity 0.3s; }
-    .vjs-fullscreen .fs-nav { display: flex; }
-    .vjs-user-active .fs-nav { opacity: 1; }
-    .fs-btn { background: #FFD700 !important; color: #000 !important; border: none; padding: 10px 20px; cursor: pointer; font-weight: bold; font-size: 16px; border-radius: 4px; }
+    .fs-nav { position: absolute; bottom: 10%; left: 50%; transform: translateX(-50%); z-index: 100; display: flex; gap: 20px; opacity: 1; }
+    .fs-btn { background: #FFD700 !important; color: #000 !important; border: none; padding: 10px 20px; cursor: pointer; font-weight: bold; font-size: 18px; border-radius: 4px; }
     
     .nav-box { display: flex; justify-content: space-between; padding: 10px; flex: 0 0 auto; }
     .nav-btn { background: #FFD700; color: #000; border: none; padding: 10px 20px; cursor: pointer; font-weight: bold; font-size: 16px; }
@@ -37,7 +36,7 @@
   <div id="brand">D.A.P TV LIVE</div>
   <div id="channel-display">Select a Channel</div>
   <div id="player-wrapper" class="video-container">
-    <div id="category-badge"></div>
+    <div id="category-badge">Loading...</div>
     <div id="fs-channel-title"></div>
     <div class="fs-nav">
         <button class="fs-btn" onclick="nav(-1)">PREV</button>
@@ -59,21 +58,7 @@
   const display = document.getElementById('channel-display'), 
         badge = document.getElementById('category-badge'), 
         titleOverlay = document.getElementById('fs-channel-title'), 
-        list = document.getElementById('ch-list'),
-        navGroup = document.querySelector('.fs-nav'),
-        playerWrapper = document.getElementById('player-wrapper');
-
-  player.on('fullscreenchange', () => {
-    if (player.isFullscreen()) {
-      player.el().appendChild(badge);
-      player.el().appendChild(titleOverlay);
-      player.el().appendChild(navGroup);
-    } else {
-      playerWrapper.appendChild(badge);
-      playerWrapper.appendChild(titleOverlay);
-      playerWrapper.appendChild(navGroup);
-    }
-  });
+        list = document.getElementById('ch-list');
 
   const channelData = [
     { type: "header", name: "D.A.P's entrepreneur & Money" },
