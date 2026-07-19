@@ -28,8 +28,6 @@
         font-size: clamp(14px, 5vw, 28px);
     }
     
-    .vjs-fullscreen #category-badge { display: block !important; }
-    
     .fs-nav { 
         position: absolute; bottom: 50px; left: 50%; transform: translateX(-50%); 
         z-index: 2147483647; display: none; gap: 10px; opacity: 0; transition: opacity 0.3s; 
@@ -46,10 +44,6 @@
     .btn { display: block; width: 100%; padding: 14px; border: none; background: #222; color: #fff; text-align: left; cursor: pointer; border-bottom: 1px solid #444; transition: 0.2s; }
     .btn.active, .btn:focus { background: #FFD700 !important; color: #000 !important; font-weight: bold; outline: none; }
     .section-header { background: #000; color: #FFD700; padding: 12px; font-size: 14px; font-weight: bold; text-transform: uppercase; border-bottom: 2px solid #FFD700; border-top: 2px solid #FFD700; }
-    
-    .btn:focus { box-shadow: inset 0 0 0 3px #FFF; outline: none; }
-    #search-bar:focus { outline: 3px solid #FFD700; }
-    .vjs-control:focus { background-color: rgba(255, 215, 0, 0.4) !important; outline: 2px solid #FFD700 !important; }
   </style>
 </head>
 <body>
@@ -76,40 +70,7 @@
 
 <script src="https://vjs.zencdn.net/8.10.0/video.min.js"></script>
 <script>
-  // Initializing Player (Poster removed for cleaner performance)
-  const player = videojs('player', { 
-    autoplay: true, 
-    muted: true, 
-    controlBar: { volumePanel: { inline: false, vertical: true } } 
-  });
-  
-  let retryCount = 0;
-  player.on('error', function() { 
-    if (retryCount < 2) {
-      retryCount++;
-      player.load();
-    } else {
-      retryCount = 0;
-      nav(1);
-    }
-  });
-
-  player.on('fullscreenchange', function() {
-    const wrapper = document.getElementById('player-wrapper');
-    const badge = document.getElementById('category-badge');
-    const titleOverlay = document.getElementById('fs-channel-title');
-    const fsNav = document.querySelector('.fs-nav');
-    if (player.isFullscreen()) {
-        player.el().appendChild(badge);
-        player.el().appendChild(titleOverlay);
-        player.el().appendChild(fsNav);
-    } else {
-        wrapper.appendChild(badge);
-        wrapper.appendChild(titleOverlay);
-        wrapper.appendChild(fsNav);
-    }
-  });
-
+  const player = videojs('player', { autoplay: true, muted: true });
   const display = document.getElementById('channel-display');
   const badge = document.getElementById('category-badge');
   const titleOverlay = document.getElementById('fs-channel-title');
@@ -461,6 +422,7 @@
     { name: "Jewish Life TV", url: "https://a-cdn.klowdtv.com/live3/jltv_720p/playlist.m3u8" }
   ];
 
+  let currentCategory = "";
   channelData.forEach(item => {
       if (item.type === "header") currentCategory = item.name;
       else channelsWithCategories.push({ ...item, category: currentCategory });
@@ -468,15 +430,22 @@
 
   function playChannel(index) {
     const ch = channelsWithCategories[index];
+    const wasFullscreen = player.isFullscreen();
+    
     player.src({src: ch.url, type: 'application/x-mpegURL'});
     player.play();
+    
     display.innerText = (index + 1) + ". " + ch.name;
     badge.innerText = ch.category; 
-    localStorage.setItem('dap_last_channel', index);
-    
     titleOverlay.innerText = (index + 1) + ". " + ch.name;
     titleOverlay.style.opacity = 1;
     setTimeout(() => { titleOverlay.style.opacity = 0; }, 2000);
+    
+    localStorage.setItem('dap_last_channel', index);
+
+    if (wasFullscreen) {
+        setTimeout(() => { if (player.requestFullscreen) player.requestFullscreen(); }, 500);
+    }
 
     const activeBtn = document.getElementById('channel-' + index);
     document.querySelectorAll('.btn').forEach(btn => btn.classList.remove('active'));
@@ -495,18 +464,10 @@
 
   function filterChannels() {
     const filter = document.getElementById('search-bar').value.toUpperCase();
-    const items = document.querySelectorAll('.btn, .section-header');
-    items.forEach(item => {
-        const text = item.innerText.toUpperCase();
-        item.style.display = text.indexOf(filter) > -1 ? "" : "none";
+    document.querySelectorAll('.btn, .section-header').forEach(item => {
+        item.style.display = item.innerText.toUpperCase().indexOf(filter) > -1 ? "" : "none";
     });
   }
-
-  document.addEventListener('keydown', (e) => {
-    if (e.key === "ArrowUp" || e.key === "ArrowLeft") { e.preventDefault(); nav(-1); }
-    if (e.key === "ArrowDown" || e.key === "ArrowRight") { e.preventDefault(); nav(1); }
-    if (e.key === "Enter") document.activeElement.click();
-  });
 
   channelData.forEach((item, index) => {
       if (item.type === "header") {
@@ -519,10 +480,10 @@
           btn.onclick = () => playChannel(flatIdx); list.appendChild(btn);
       }
   });
-  
+
+  player.on('error', () => nav(1));
   const savedChannel = localStorage.getItem('dap_last_channel');
   playChannel(savedChannel !== null ? parseInt(savedChannel) : 0);
 </script>
 </body>
 </html>
-
