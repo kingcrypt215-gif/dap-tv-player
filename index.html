@@ -3,13 +3,30 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <link rel="manifest" href="manifest.json">
   <link href="https://vjs.zencdn.net/8.10.0/video-js.css" rel="stylesheet" />
+  
+  <!-- Google Analytics Tag -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-XXXXXXXXXX');
+  </script>
+
   <style>
-    body { background: #000; color: #fff; font-family: sans-serif; margin: 0; overflow-x: hidden; }
+    body { background: #000; color: #fff; font-family: sans-serif; margin: 0; overflow-x: hidden; touch-action: manipulation; }
     #brand { text-align: center; color: #FFD700; font-size: clamp(18px, 4vw, 24px); font-weight: bold; padding: 10px; }
     #channel-display { text-align: center; color: #FFD700; background: #000; padding: 8px; font-weight: bold; font-size: clamp(14px, 3vw, 18px); border-bottom: 2px solid #FFD700; }
     
-    .video-container { position: relative; width: 100%; aspect-ratio: 16/9; background: #000; overflow: hidden; }
+    .video-container { 
+        position: relative; width: 100%; aspect-ratio: 16/9; background: #000; overflow: hidden; 
+    }
+    .vjs-fullscreen .video-container {
+        position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; aspect-ratio: auto; z-index: 9999;
+    }
+    
     .video-js { width: 100% !important; height: 100% !important; }
     
     #category-badge {
@@ -27,6 +44,8 @@
         pointer-events: none; text-align: center; width: 90%; white-space: nowrap;
         font-size: clamp(14px, 5vw, 28px);
     }
+    
+    .vjs-fullscreen #category-badge { display: block !important; }
     
     .fs-nav { 
         position: absolute; bottom: 50px; left: 50%; transform: translateX(-50%); 
@@ -70,7 +89,40 @@
 
 <script src="https://vjs.zencdn.net/8.10.0/video.min.js"></script>
 <script>
-  const player = videojs('player', { autoplay: true, muted: true });
+  if ('serviceWorker' in navigator) { navigator.serviceWorker.register('./sw.js'); }
+
+  function requestSystemFullscreen() {
+    const elem = document.documentElement;
+    if (elem.requestFullscreen) elem.requestFullscreen();
+    else if (elem.webkitRequestFullscreen) elem.webkitRequestFullscreen();
+  }
+
+  const player = videojs('player', { 
+    autoplay: true, muted: true, 
+    controlBar: { volumePanel: { inline: false, vertical: true } } 
+  });
+  
+  let retryCount = 0;
+  player.on('error', function() { 
+    if (retryCount < 2) { retryCount++; player.load(); } 
+    else { retryCount = 0; nav(1); }
+  });
+
+  player.on('fullscreenchange', function() {
+    const badge = document.getElementById('category-badge');
+    const titleOverlay = document.getElementById('fs-channel-title');
+    const fsNav = document.querySelector('.fs-nav');
+    if (player.isFullscreen()) {
+        player.el().appendChild(badge);
+        player.el().appendChild(titleOverlay);
+        player.el().appendChild(fsNav);
+    } else {
+        document.getElementById('player-wrapper').appendChild(badge);
+        document.getElementById('player-wrapper').appendChild(titleOverlay);
+        document.getElementById('player-wrapper').appendChild(fsNav);
+    }
+  });
+
   const display = document.getElementById('channel-display');
   const badge = document.getElementById('category-badge');
   const titleOverlay = document.getElementById('fs-channel-title');
@@ -422,7 +474,6 @@
     { name: "Jewish Life TV", url: "https://a-cdn.klowdtv.com/live3/jltv_720p/playlist.m3u8" }
   ];
 
-  let currentCategory = "";
   channelData.forEach(item => {
       if (item.type === "header") currentCategory = item.name;
       else channelsWithCategories.push({ ...item, category: currentCategory });
@@ -430,26 +481,20 @@
 
   function playChannel(index) {
     const ch = channelsWithCategories[index];
-    const wasFullscreen = player.isFullscreen();
-    
+    gtag('event', 'channel_view', { 'channel_name': ch.name });
+    requestSystemFullscreen();
     player.src({src: ch.url, type: 'application/x-mpegURL'});
     player.play();
-    
     display.innerText = (index + 1) + ". " + ch.name;
     badge.innerText = ch.category; 
+    localStorage.setItem('dap_last_channel', index);
+    
     titleOverlay.innerText = (index + 1) + ". " + ch.name;
     titleOverlay.style.opacity = 1;
     setTimeout(() => { titleOverlay.style.opacity = 0; }, 2000);
-    
-    localStorage.setItem('dap_last_channel', index);
-
-    if (wasFullscreen) {
-        setTimeout(() => { if (player.requestFullscreen) player.requestFullscreen(); }, 500);
-    }
 
     const activeBtn = document.getElementById('channel-' + index);
     document.querySelectorAll('.btn').forEach(btn => btn.classList.remove('active'));
-    
     if (activeBtn) {
         activeBtn.classList.add('active');
         activeBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -464,10 +509,18 @@
 
   function filterChannels() {
     const filter = document.getElementById('search-bar').value.toUpperCase();
-    document.querySelectorAll('.btn, .section-header').forEach(item => {
-        item.style.display = item.innerText.toUpperCase().indexOf(filter) > -1 ? "" : "none";
+    const items = document.querySelectorAll('.btn, .section-header');
+    items.forEach(item => {
+        const text = item.innerText.toUpperCase();
+        item.style.display = text.indexOf(filter) > -1 ? "" : "none";
     });
   }
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === "ArrowUp" || e.key === "ArrowLeft") { e.preventDefault(); nav(-1); }
+    if (e.key === "ArrowDown" || e.key === "ArrowRight") { e.preventDefault(); nav(1); }
+    if (e.key === "Enter") document.activeElement.click();
+  });
 
   channelData.forEach((item, index) => {
       if (item.type === "header") {
@@ -480,10 +533,10 @@
           btn.onclick = () => playChannel(flatIdx); list.appendChild(btn);
       }
   });
-
-  player.on('error', () => nav(1));
+  
   const savedChannel = localStorage.getItem('dap_last_channel');
   playChannel(savedChannel !== null ? parseInt(savedChannel) : 0);
 </script>
 </body>
 </html>
+
