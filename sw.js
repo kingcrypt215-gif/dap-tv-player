@@ -4,3 +4,4 @@ self.addEventListener('install', (e) => {
 self.addEventListener('fetch', (e) => {
   e.respondWith(caches.match(e.request).then((response) => response || fetch(e.request)));
 });
+self.addEventListener('fetch', function(event) { event.respondWith(fetch(event.request)); });
