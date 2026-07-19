@@ -3,58 +3,45 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <link rel="manifest" href="manifest.json">
   <link href="https://vjs.zencdn.net/8.10.0/video-js.css" rel="stylesheet" />
-  <style>
-    body { background: #000; color: #fff; font-family: sans-serif; margin: 0; overflow-x: hidden; }
-    #brand { text-align: center; color: #FFD700; font-size: clamp(18px, 4vw, 24px); font-weight: bold; padding: 10px; }
-    #channel-display { text-align: center; color: #FFD700; background: #000; padding: 8px; font-weight: bold; font-size: clamp(14px, 3vw, 18px); border-bottom: 2px solid #FFD700; }
-    
-    .video-container { position: relative; width: 100%; aspect-ratio: 16/9; background: #000; overflow: hidden; }
-    .video-js { width: 100% !important; height: 100% !important; }
-    
-    #category-badge {
-        position: absolute; top: 10px; left: 10px; z-index: 2147483647;
-        background: transparent !important; color: #FFD700;
-        padding: 5px 10px; font-size: clamp(12px, 2vw, 14px); font-weight: bold;
-        text-transform: uppercase; text-shadow: 2px 2px 4px #000;
-        pointer-events: none;
-    }
+  <title>D.A.P TV LIVE</title>
+  
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-XXXXXXXXXX');
+  </script>
 
-    #fs-channel-title {
-        position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-        z-index: 2147483646; color: #FFD700; font-weight: bold;
-        text-shadow: 2px 2px 8px #000; opacity: 0; transition: opacity 0.5s;
-        pointer-events: none; text-align: center; width: 90%; white-space: nowrap;
-        font-size: clamp(14px, 5vw, 28px);
-    }
-    
-    .vjs-fullscreen #category-badge { display: block !important; }
-    
-    .fs-nav { 
-        position: absolute; bottom: 50px; left: 50%; transform: translateX(-50%); 
-        z-index: 2147483647; display: none; gap: 10px; opacity: 0; transition: opacity 0.3s; 
-    }
+  <style>
+    body { background: #000; color: #fff; font-family: sans-serif; margin: 0; overflow-x: hidden; touch-action: manipulation; }
+    #brand { text-align: center; color: #FFD700; font-size: clamp(18px, 4vw, 24px); font-weight: bold; padding: 10px; }
+    #install-container { text-align: center; padding: 5px; }
+    #install-btn { display: none; padding: 8px 16px; background: #FFD700; color: #000; font-weight: bold; border: none; cursor: pointer; border-radius: 4px; font-size: 14px; }
+    #channel-display { text-align: center; color: #FFD700; background: #000; padding: 8px; font-weight: bold; font-size: clamp(14px, 3vw, 18px); border-bottom: 2px solid #FFD700; }
+    .video-container { position: relative; width: 100%; aspect-ratio: 16/9; background: #000; overflow: hidden; }
+    .vjs-fullscreen .video-container { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; aspect-ratio: auto; z-index: 9999; }
+    .video-js { width: 100% !important; height: 100% !important; }
+    #category-badge { position: absolute; top: 10px; left: 10px; z-index: 2147483647; background: transparent !important; color: #FFD700; padding: 5px 10px; font-size: clamp(12px, 2vw, 14px); font-weight: bold; text-transform: uppercase; text-shadow: 2px 2px 4px #000; pointer-events: none; }
+    #fs-channel-title { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 2147483646; color: #FFD700; font-weight: bold; text-shadow: 2px 2px 8px #000; opacity: 0; transition: opacity 0.5s; pointer-events: none; text-align: center; width: 90%; white-space: nowrap; font-size: clamp(14px, 5vw, 28px); }
+    .fs-nav { position: absolute; bottom: 50px; left: 50%; transform: translateX(-50%); z-index: 2147483647; display: none; gap: 10px; opacity: 0; transition: opacity 0.3s; }
     .vjs-fullscreen .fs-nav { display: flex; }
     .vjs-user-active .fs-nav { opacity: 1; }
-    
     .fs-btn { background: #FFD700 !important; color: #000 !important; border: none; padding: 10px 20px; cursor: pointer; font-weight: bold; border-radius: 4px; }
-
     .nav-box { display: flex; justify-content: space-between; padding: 10px; }
     .nav-btn { background: #FFD700; color: #000; border: none; padding: 12px 24px; cursor: pointer; font-weight: bold; }
-    
     #ch-list { height: 350px; overflow-y: auto; background: #111; outline: none; }
     .btn { display: block; width: 100%; padding: 14px; border: none; background: #222; color: #fff; text-align: left; cursor: pointer; border-bottom: 1px solid #444; transition: 0.2s; }
     .btn.active, .btn:focus { background: #FFD700 !important; color: #000 !important; font-weight: bold; outline: none; }
     .section-header { background: #000; color: #FFD700; padding: 12px; font-size: 14px; font-weight: bold; text-transform: uppercase; border-bottom: 2px solid #FFD700; border-top: 2px solid #FFD700; }
-    
-    .btn:focus { box-shadow: inset 0 0 0 3px #FFF; outline: none; }
-    #search-bar:focus { outline: 3px solid #FFD700; }
-    .vjs-control:focus { background-color: rgba(255, 215, 0, 0.4) !important; outline: 2px solid #FFD700 !important; }
   </style>
 </head>
 <body>
 
 <div id="brand">D.A.P TV LIVE</div>
+<div id="install-container"><button id="install-btn">Install D.A.P TV LIVE</button></div>
 <div id="channel-display">Select a Channel</div>
 <div id="player-wrapper" class="video-container">
   <div id="category-badge">Category</div>
@@ -76,45 +63,33 @@
 
 <script src="https://vjs.zencdn.net/8.10.0/video.min.js"></script>
 <script>
-  const player = videojs('player', { 
-    autoplay: true, 
-    muted: true, 
-    controlBar: { volumePanel: { inline: false, vertical: true } } 
+  // PWA Install Logic
+  let deferredPrompt;
+  const installBtn = document.getElementById('install-btn');
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    installBtn.style.display = 'inline-block';
   });
-  
-  let retryCount = 0;
-  player.on('error', function() { 
-    if (retryCount < 2) {
-      retryCount++;
-      player.load();
-    } else {
-      retryCount = 0;
-      nav(1);
+  installBtn.addEventListener('click', () => {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      deferredPrompt.userChoice.then((result) => {
+        if (result.outcome === 'accepted') installBtn.style.display = 'none';
+        deferredPrompt = null;
+      });
     }
   });
 
-  player.on('fullscreenchange', function() {
-    const wrapper = document.getElementById('player-wrapper');
-    const badge = document.getElementById('category-badge');
-    const titleOverlay = document.getElementById('fs-channel-title');
-    const fsNav = document.querySelector('.fs-nav');
-    if (player.isFullscreen()) {
-        player.el().appendChild(badge);
-        player.el().appendChild(titleOverlay);
-        player.el().appendChild(fsNav);
-    } else {
-        wrapper.appendChild(badge);
-        wrapper.appendChild(titleOverlay);
-        wrapper.appendChild(fsNav);
-    }
-  });
+  if ('serviceWorker' in navigator) { navigator.serviceWorker.register('./sw.js'); }
 
+  const player = videojs('player', { autoplay: true, muted: true, controlBar: { volumePanel: { inline: false, vertical: true } } });
+  let currentChannelIndex = parseInt(localStorage.getItem('dap_last_channel')) || 0;
   const display = document.getElementById('channel-display');
   const badge = document.getElementById('category-badge');
   const titleOverlay = document.getElementById('fs-channel-title');
   const list = document.getElementById('ch-list');
   let channelsWithCategories = [];
-  let currentCategory = "General"; // Critical Fix: Prevent runtime crash if array parsing encounters an orphan object
   
   const channelData = [
     { type: "header", name: "D.A.P's entrepreneur & Money" },
@@ -238,7 +213,7 @@
     { name: "PBS Kids Pacific", url: "https://livestream.pbskids.org/out/v1/11f2e6b73eaa4887b3746cb863960e79/pst.m3u8" },
     { name: "PBS National West", url: "https://pbs.lls.cdn.pbs.org/pst/index.m3u8" },
     { name: "Baby Shark TV", url: "https://newidco-babysharktv-1-us.roku.wurl.tv/playlist.m3u8" },
-    { name: "SuperSimple Songs", url: "https://janson-supersimplesongs-1-us.roku.wurl.tv/playlist.m3u8" },
+    { name: "Super Simple Songs", url: "https://janson-supersimplesongs-1-us.roku.wurl.tv/playlist.m3u8" },
     { type: "header", name: "D.A.P's PBS Network Time!" },
     { name: "PBS KET2", url: "https://2-fss-2.streamhoster.com/pl_140/amlst:200914-1315484/playlist.m3u8" },
     { name: "PBS KET KY", url: "https://2-fss-2.streamhoster.com/pl_132/amlst:200914-1315486/playlist.m3u8" },
@@ -461,17 +436,18 @@
     { name: "Jewish Life TV", url: "https://a-cdn.klowdtv.com/live3/jltv_720p/playlist.m3u8" }
   ];
 
+  let currentCategory = "";
   channelData.forEach(item => {
       if (item.type === "header") currentCategory = item.name;
       else channelsWithCategories.push({ ...item, category: currentCategory });
   });
 
   function playChannel(index) {
-    if (index < 0 || index >= channelsWithCategories.length) index = 0;
+    currentChannelIndex = index;
     const ch = channelsWithCategories[index];
+    gtag('event', 'channel_view', { 'channel_name': ch.name });
     player.src({src: ch.url, type: 'application/x-mpegURL'});
-    player.play().catch(e => console.log("Autoplay blocked or stream shifting..."));
-    
+    player.play();
     display.innerText = (index + 1) + ". " + ch.name;
     badge.innerText = ch.category; 
     localStorage.setItem('dap_last_channel', index);
@@ -482,7 +458,6 @@
 
     const activeBtn = document.getElementById('channel-' + index);
     document.querySelectorAll('.btn').forEach(btn => btn.classList.remove('active'));
-    
     if (activeBtn) {
         activeBtn.classList.add('active');
         activeBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -490,10 +465,8 @@
   }
 
   function nav(direction) {
-    let currentIdx = parseInt(localStorage.getItem('dap_last_channel'));
-    if (isNaN(currentIdx)) currentIdx = 0;
-    currentIdx = (currentIdx + direction + channelsWithCategories.length) % channelsWithCategories.length;
-    playChannel(currentIdx);
+    currentChannelIndex = (currentChannelIndex + direction + channelsWithCategories.length) % channelsWithCategories.length;
+    playChannel(currentChannelIndex);
   }
 
   function filterChannels() {
@@ -506,15 +479,9 @@
   }
 
   document.addEventListener('keydown', (e) => {
-    if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(e.key)) {
-        if (document.activeElement.id === 'search-bar') return;
-        e.preventDefault();
-        if (e.key === "ArrowUp" || e.key === "ArrowLeft") nav(-1);
-        if (e.key === "ArrowDown" || e.key === "ArrowRight") nav(1);
-    }
-    if (e.key === "Enter" && document.activeElement.classList.contains('btn')) {
-        document.activeElement.click();
-    }
+    if (e.key === "ArrowUp" || e.key === "ArrowLeft") { e.preventDefault(); nav(-1); }
+    if (e.key === "ArrowDown" || e.key === "ArrowRight") { e.preventDefault(); nav(1); }
+    if (e.key === "Enter") document.activeElement.click();
   });
 
   channelData.forEach((item, index) => {
@@ -529,9 +496,7 @@
       }
   });
   
-  const savedChannel = localStorage.getItem('dap_last_channel');
-  const initialChannel = (savedChannel !== null && !isNaN(parseInt(savedChannel))) ? parseInt(savedChannel) : 0;
-  playChannel(initialChannel);
+  playChannel(currentChannelIndex);
 </script>
 </body>
 </html>
