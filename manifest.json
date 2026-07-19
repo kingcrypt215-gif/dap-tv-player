@@ -18,3 +18,11 @@
     }
   ]
 }
+{
+  "name": "D.A.P TV LIVE",
+  "short_name": "D.A.P TV",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#FFD700"
+}
