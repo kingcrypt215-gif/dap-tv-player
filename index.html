@@ -89,7 +89,15 @@
 
 <script src="https://vjs.zencdn.net/8.10.0/video.min.js"></script>
 <script>
-  if ('serviceWorker' in navigator) { navigator.serviceWorker.register('./sw.js'); }
+  // Dynamic path setup for PWA registration depending on GitHub Pages vs Root environments
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      const swPath = window.location.pathname.endsWith('/') ? './sw.js' : 'sw.js';
+      navigator.serviceWorker.register(swPath)
+        .then(reg => console.log('Service Worker Registered successfully.', reg.scope))
+        .catch(err => console.log('Service Worker Registration failed:', err));
+    });
+  }
 
   function requestSystemFullscreen() {
     const elem = document.documentElement;
@@ -251,7 +259,7 @@
     { name: "PBS Kids Pacific", url: "https://livestream.pbskids.org/out/v1/11f2e6b73eaa4887b3746cb863960e79/pst.m3u8" },
     { name: "PBS National West", url: "https://pbs.lls.cdn.pbs.org/pst/index.m3u8" },
     { name: "Baby Shark TV", url: "https://newidco-babysharktv-1-us.roku.wurl.tv/playlist.m3u8" },
-    { name: "Super Simple Songs", url: "https://janson-supersimplesongs-1-us.roku.wurl.tv/playlist.m3u8" },
+    { name: "SuperSimple Songs", url: "https://janson-supersimplesongs-1-us.roku.wurl.tv/playlist.m3u8" },
     { type: "header", name: "D.A.P's PBS Network Time!" },
     { name: "PBS KET2", url: "https://2-fss-2.streamhoster.com/pl_140/amlst:200914-1315484/playlist.m3u8" },
     { name: "PBS KET KY", url: "https://2-fss-2.streamhoster.com/pl_132/amlst:200914-1315486/playlist.m3u8" },
