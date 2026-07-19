@@ -3,34 +3,40 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-  <link rel="manifest" href="manifest.json">
   <link href="https://vjs.zencdn.net/8.10.0/video-js.css" rel="stylesheet" />
-  
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-    gtag('config', 'G-XXXXXXXXXX');
-  </script>
-
   <style>
-    body { background: #000; color: #fff; font-family: sans-serif; margin: 0; overflow-x: hidden; touch-action: manipulation; }
+    body { background: #000; color: #fff; font-family: sans-serif; margin: 0; overflow-x: hidden; }
     #brand { text-align: center; color: #FFD700; font-size: clamp(18px, 4vw, 24px); font-weight: bold; padding: 10px; }
-    #install-container { text-align: center; padding: 5px; }
-    #install-btn { display: none; padding: 8px 16px; background: #FFD700; color: #000; font-weight: bold; border: none; cursor: pointer; border-radius: 4px; font-size: 14px; }
     #channel-display { text-align: center; color: #FFD700; background: #000; padding: 8px; font-weight: bold; font-size: clamp(14px, 3vw, 18px); border-bottom: 2px solid #FFD700; }
     
     .video-container { position: relative; width: 100%; aspect-ratio: 16/9; background: #000; overflow: hidden; }
-    .vjs-fullscreen .video-container { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; aspect-ratio: auto; z-index: 9999; }
     .video-js { width: 100% !important; height: 100% !important; }
     
-    #category-badge { position: absolute; top: 10px; left: 10px; z-index: 2147483647; background: transparent !important; color: #FFD700; padding: 5px 10px; font-size: clamp(12px, 2vw, 14px); font-weight: bold; text-transform: uppercase; text-shadow: 2px 2px 4px #000; pointer-events: none; }
-    #fs-channel-title { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 2147483646; color: #FFD700; font-weight: bold; text-shadow: 2px 2px 8px #000; opacity: 0; transition: opacity 0.5s; pointer-events: none; text-align: center; width: 90%; white-space: nowrap; font-size: clamp(14px, 5vw, 28px); }
+    #category-badge {
+        position: absolute; top: 10px; left: 10px; z-index: 2147483647;
+        background: transparent !important; color: #FFD700;
+        padding: 5px 10px; font-size: clamp(12px, 2vw, 14px); font-weight: bold;
+        text-transform: uppercase; text-shadow: 2px 2px 4px #000;
+        pointer-events: none;
+    }
+
+    #fs-channel-title {
+        position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+        z-index: 2147483646; color: #FFD700; font-weight: bold;
+        text-shadow: 2px 2px 8px #000; opacity: 0; transition: opacity 0.5s;
+        pointer-events: none; text-align: center; width: 90%; white-space: nowrap;
+        font-size: clamp(14px, 5vw, 28px);
+    }
     
-    .fs-nav { position: absolute; bottom: 50px; left: 50%; transform: translateX(-50%); z-index: 2147483647; display: none; gap: 10px; opacity: 0; transition: opacity 0.3s; }
+    .vjs-fullscreen #category-badge { display: block !important; }
+    
+    .fs-nav { 
+        position: absolute; bottom: 50px; left: 50%; transform: translateX(-50%); 
+        z-index: 2147483647; display: none; gap: 10px; opacity: 0; transition: opacity 0.3s; 
+    }
     .vjs-fullscreen .fs-nav { display: flex; }
     .vjs-user-active .fs-nav { opacity: 1; }
+    
     .fs-btn { background: #FFD700 !important; color: #000 !important; border: none; padding: 10px 20px; cursor: pointer; font-weight: bold; border-radius: 4px; }
 
     .nav-box { display: flex; justify-content: space-between; padding: 10px; }
@@ -40,12 +46,15 @@
     .btn { display: block; width: 100%; padding: 14px; border: none; background: #222; color: #fff; text-align: left; cursor: pointer; border-bottom: 1px solid #444; transition: 0.2s; }
     .btn.active, .btn:focus { background: #FFD700 !important; color: #000 !important; font-weight: bold; outline: none; }
     .section-header { background: #000; color: #FFD700; padding: 12px; font-size: 14px; font-weight: bold; text-transform: uppercase; border-bottom: 2px solid #FFD700; border-top: 2px solid #FFD700; }
+    
+    .btn:focus { box-shadow: inset 0 0 0 3px #FFF; outline: none; }
+    #search-bar:focus { outline: 3px solid #FFD700; }
+    .vjs-control:focus { background-color: rgba(255, 215, 0, 0.4) !important; outline: 2px solid #FFD700 !important; }
   </style>
 </head>
 <body>
 
 <div id="brand">D.A.P TV LIVE</div>
-<div id="install-container"><button id="install-btn">Install D.A.P TV LIVE</button></div>
 <div id="channel-display">Select a Channel</div>
 <div id="player-wrapper" class="video-container">
   <div id="category-badge">Category</div>
@@ -67,28 +76,40 @@
 
 <script src="https://vjs.zencdn.net/8.10.0/video.min.js"></script>
 <script>
-  // PWA Install Logic
-  let deferredPrompt;
-  const installBtn = document.getElementById('install-btn');
-  window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault();
-    deferredPrompt = e;
-    installBtn.style.display = 'inline-block';
+  // Initializing Player (Poster removed for cleaner performance)
+  const player = videojs('player', { 
+    autoplay: true, 
+    muted: true, 
+    controlBar: { volumePanel: { inline: false, vertical: true } } 
   });
-  installBtn.addEventListener('click', () => {
-    if (deferredPrompt) {
-      deferredPrompt.prompt();
-      deferredPrompt.userChoice.then((result) => {
-        if (result.outcome === 'accepted') installBtn.style.display = 'none';
-        deferredPrompt = null;
-      });
+  
+  let retryCount = 0;
+  player.on('error', function() { 
+    if (retryCount < 2) {
+      retryCount++;
+      player.load();
+    } else {
+      retryCount = 0;
+      nav(1);
     }
   });
 
-  if ('serviceWorker' in navigator) { navigator.serviceWorker.register('./sw.js'); }
+  player.on('fullscreenchange', function() {
+    const wrapper = document.getElementById('player-wrapper');
+    const badge = document.getElementById('category-badge');
+    const titleOverlay = document.getElementById('fs-channel-title');
+    const fsNav = document.querySelector('.fs-nav');
+    if (player.isFullscreen()) {
+        player.el().appendChild(badge);
+        player.el().appendChild(titleOverlay);
+        player.el().appendChild(fsNav);
+    } else {
+        wrapper.appendChild(badge);
+        wrapper.appendChild(titleOverlay);
+        wrapper.appendChild(fsNav);
+    }
+  });
 
-  const player = videojs('player', { autoplay: true, muted: true, controlBar: { volumePanel: { inline: false, vertical: true } } });
-  let currentChannelIndex = parseInt(localStorage.getItem('dap_last_channel')) || 0;
   const display = document.getElementById('channel-display');
   const badge = document.getElementById('category-badge');
   const titleOverlay = document.getElementById('fs-channel-title');
@@ -440,16 +461,13 @@
     { name: "Jewish Life TV", url: "https://a-cdn.klowdtv.com/live3/jltv_720p/playlist.m3u8" }
   ];
 
-  let currentCategory = "";
   channelData.forEach(item => {
       if (item.type === "header") currentCategory = item.name;
       else channelsWithCategories.push({ ...item, category: currentCategory });
   });
 
   function playChannel(index) {
-    currentChannelIndex = index;
     const ch = channelsWithCategories[index];
-    gtag('event', 'channel_view', { 'channel_name': ch.name });
     player.src({src: ch.url, type: 'application/x-mpegURL'});
     player.play();
     display.innerText = (index + 1) + ". " + ch.name;
@@ -462,6 +480,7 @@
 
     const activeBtn = document.getElementById('channel-' + index);
     document.querySelectorAll('.btn').forEach(btn => btn.classList.remove('active'));
+    
     if (activeBtn) {
         activeBtn.classList.add('active');
         activeBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -469,8 +488,9 @@
   }
 
   function nav(direction) {
-    currentChannelIndex = (currentChannelIndex + direction + channelsWithCategories.length) % channelsWithCategories.length;
-    playChannel(currentChannelIndex);
+    let currentIdx = parseInt(localStorage.getItem('dap_last_channel')) || 0;
+    currentIdx = (currentIdx + direction + channelsWithCategories.length) % channelsWithCategories.length;
+    playChannel(currentIdx);
   }
 
   function filterChannels() {
@@ -481,6 +501,12 @@
         item.style.display = text.indexOf(filter) > -1 ? "" : "none";
     });
   }
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === "ArrowUp" || e.key === "ArrowLeft") { e.preventDefault(); nav(-1); }
+    if (e.key === "ArrowDown" || e.key === "ArrowRight") { e.preventDefault(); nav(1); }
+    if (e.key === "Enter") document.activeElement.click();
+  });
 
   channelData.forEach((item, index) => {
       if (item.type === "header") {
@@ -494,7 +520,8 @@
       }
   });
   
-  playChannel(currentChannelIndex);
+  const savedChannel = localStorage.getItem('dap_last_channel');
+  playChannel(savedChannel !== null ? parseInt(savedChannel) : 0);
 </script>
 </body>
 </html>
