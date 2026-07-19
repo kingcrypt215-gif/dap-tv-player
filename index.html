@@ -474,6 +474,7 @@
     { name: "Jewish Life TV", url: "https://a-cdn.klowdtv.com/live3/jltv_720p/playlist.m3u8" }
   ];
 
+  let currentCategory = "";
   channelData.forEach(item => {
       if (item.type === "header") currentCategory = item.name;
       else channelsWithCategories.push({ ...item, category: currentCategory });
