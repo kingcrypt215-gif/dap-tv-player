@@ -6,7 +6,7 @@
 <link rel="manifest" href="manifest.json">
 <link href="https://vjs.zencdn.net/8.10.0/video-js.css" rel="stylesheet" />
 <style>
-body { background: #000; color: #fff; font-family: sans-serif; margin: 0; overflow-x: hidden; }
+body { background: #000; color: #fff; font-family: sans-serif; margin: 0; overflow-x: hidden; -webkit-tap-highlight-color: transparent; }
 #brand { text-align: center; color: #FFD700; font-size: clamp(18px, 4vw, 24px); font-weight: bold; padding: 10px; }
 #channel-display { text-align: center; color: #FFD700; background: #000; padding: 8px; font-weight: bold; font-size: clamp(14px, 3vw, 18px); border-bottom: 2px solid #FFD700; }
 .video-container { position: relative; width: 100%; aspect-ratio: 16/9; background: #000; overflow: hidden; }
@@ -38,32 +38,39 @@ z-index: 2147483647; display: none; gap: 10px; opacity: 0; transition: opacity 0
 .nav-btn { background: #FFD700; color: #000; border: none; padding: 12px 24px; cursor: pointer; font-weight: bold; }
 #ch-list { height: 350px; overflow-y: auto; background: #111; outline: none; }
 .btn { display: block; width: 100%; padding: 14px; border: none; background: #222; color: #fff; text-align: left; cursor: pointer; border-bottom: 1px solid #444; transition: 0.2s; }
-.btn.active, .btn:focus { background: #FFD700 !important; color: #000 !important; font-weight: bold; outline: none; }
+.btn.active { background: #FFD700 !important; color: #000 !important; font-weight: bold; }
+.btn:focus { background: #FFD700 !important; color: #000 !important; font-weight: bold; outline: 3px solid #FFF; box-shadow: 0 0 10px rgba(255, 215, 0, 0.5); }
 .section-header { background: #000; color: #FFD700; padding: 12px; font-size: 14px; font-weight: bold; text-transform: uppercase; border-bottom: 2px solid #FFD700; border-top: 2px solid #FFD700; }
-.btn:focus { box-shadow: inset 0 0 0 3px #FFF; outline: none; }
 #search-bar:focus { outline: 3px solid #FFD700; }
 .vjs-control:focus { background-color: rgba(255, 215, 0, 0.4) !important; outline: 2px solid #FFD700 !important; }
+.nav-btn:focus, .fs-btn:focus { outline: 3px solid #FFF; box-shadow: 0 0 10px rgba(255, 215, 0, 0.5); }
+#search-bar { -webkit-appearance: none; appearance: none; }
+@media (hover: none) and (pointer: coarse) {
+.btn { padding: 18px; }
+.nav-btn { padding: 16px 32px; }
+.fs-btn { padding: 14px 28px; }
+}
 </style>
 </head>
 <body>
 <div id="brand">D.A.P TV LIVE</div>
-<div id="channel-display">Select a Channel</div>
+<div id="channel-display" role="status" aria-live="polite">Select a Channel</div>
 <div id="player-wrapper" class="video-container">
-<div id="category-badge">Category</div>
-<div id="fs-channel-title">Channel Name</div>
+<div id="category-badge" aria-hidden="true">Category</div>
+<div id="fs-channel-title" aria-hidden="true">Channel Name</div>
 <div class="fs-nav">
-<button class="fs-btn" onclick="nav(-1)">PREV</button>
-<button class="fs-btn" onclick="nav(1)">NEXT</button>
+<button class="fs-btn" onclick="nav(-1)" aria-label="Previous Channel">PREV</button>
+<button class="fs-btn" onclick="nav(1)" aria-label="Next Channel">NEXT</button>
 </div>
-<video id="player" class="video-js vjs-default-skin" controls playsinline></video>
+<video id="player" class="video-js vjs-default-skin" controls playsinline aria-label="Video Player"></video>
 </div>
 <div class="nav-box">
-<button class="nav-btn" onclick="nav(-1)">PREVIOUS</button>
-<button class="nav-btn" onclick="nav(1)">NEXT</button>
+<button class="nav-btn" onclick="nav(-1)" aria-label="Previous Channel">PREVIOUS</button>
+<button class="nav-btn" onclick="nav(1)" aria-label="Next Channel">NEXT</button>
 </div>
-<input type="text" id="search-bar" placeholder="Search Channels..." onkeyup="filterChannels()" style="width: 100%; padding: 10px; box-sizing: border-box; background: #222; color: #FFD700; border: 1px solid #444; border-top: 2px solid #FFD700;">
+<input type="text" id="search-bar" placeholder="Search Channels..." onkeyup="filterChannels()" aria-label="Search Channels" style="width: 100%; padding: 10px; box-sizing: border-box; background: #222; color: #FFD700; border: 1px solid #444; border-top: 2px solid #FFD700;">
 
-<div id="ch-list" tabindex="0"></div>
+<div id="ch-list" tabindex="0" role="listbox" aria-label="Channel List"></div>
 <script src="https://vjs.zencdn.net/8.10.0/video.min.js"></script>
 <script>
 // App Registration
@@ -104,7 +111,8 @@ const titleOverlay = document.getElementById('fs-channel-title');
 const list = document.getElementById('ch-list');
 
 let channelsWithCategories = [];
-const channelData = [{ type: "header", name: "D.A.P's entrepreneur & Money" },
+const channelData = [
+{ type: "header", name: "D.A.P's entrepreneur & Money" },
 { name: "Entrepreneur TV", url: "https://cineverse-entrepreneurtv-entrepreneurtv-1-us.ono.wurl.tv/playlist.m3u8" },
 { name: "Black Enterprise", url: "https://a-cdn.klowdtv.com/live3/blackenterprise_720p/playlist.m3u8" },
 { name: "My Money", url: "https://dqaj8xog66lli.cloudfront.net/v1/master/9d062541f2ff39b5c0f48b743c6411d25f62fc25/DistroTV-MuxIP-MyMoney/468.m3u8" },
@@ -253,7 +261,7 @@ const channelData = [{ type: "header", name: "D.A.P's entrepreneur & Money" },
 { name: "NEW KMOVIES (1080p)", url: "https://ads.its-newid.net/api/manifest.m3u8?ads.service_id=USAJ30000122O&channel_id=newid_342&tp=samsung_tvplus" },
 { name: "Series K Edge (1080p)", url: "https://d3mznj2vub522l.cloudfront.net/playlist.m3u8" },
 { name: "Series K Heart (1080p)", url: "https://d28efmnqar6ea8.cloudfront.net/playlist.m3u8" },
-{ name: "Series K Legacy (1080p)", url: "https://d2uvezlpjwbhrx.cloudfront.net/playlist.m3u8" },
+{ name: "Series K Legacy (1080p)", url: "https://d2uezlpjwbhrx.cloudfront.net/playlist.m3u8" },
 { name: "Cirque du Soleil", url: "https://amg01439-amg01439c1-amgplt0081.playout.now3.amagi.tv/playlist/amg01439-amg01439c1-amgplt0081/playlist.m3u8" },
 { name: "6 Wise Tv", url: "https://live.enhdtv.com:8081/8150/index.m3u8" },
 { name: "LATV", url: "https://amg00779-latv-amg00779c1-cineverse-us-1746.playouts.now.amagi.tv/playlist/amg00779-latvnetworkllc-latv-cineverseus/playlist.m3u8" },
@@ -493,7 +501,7 @@ const channelData = [{ type: "header", name: "D.A.P's entrepreneur & Money" },
 { name: "Universe Mysteries Solved (1080p) [Geo-blocked]", url: "https://pb-frhhb6b56246j.akamaized.net/The_Universe.m3u8" },
 { name: "The UnXplained with William Shatner (1080p) [Geo-blocked]", url: "https://pb-ii1ggyq6hduy9.akamaized.net/playlist.m3u8" },
 { name: "Discovering China", url: "https://amg01314-amg01314c8-distrotv-us-10218.playouts.now.amagi.tv/playlist/amg01314-cgtn-cgtndiscoveringchina-distrotvus/playlist.m3u8" },
-{ name: "InWonder", url: "https://amg00861-terncloud-amg00861c4-cineverse-us-962.playouts.now.amagi.tv/playlist/amg00861-terninternationalfast-inwonderushd-cineverseus/playlist.m3u8" },
+{ name: "InWonder", url: "https://amg00861-terncloud-amg00861c8-cineverse-us-962.playouts.now.amagi.tv/playlist/amg00861-terninternationalfast-inwonderushd-cineverseus/playlist.m3u8" },
 { name: "InWonder (1080p)", url: "https://amg00861-terninternation-inwonderushd-samsungus-gqtpa.amagi.tv/playlist/amg00861-terninternation-inwonderushd-samsungus/playlist.m3u8" },
 { name: "WBTV Mysterious Worlds (720p) [Geo-blocked]", url: "https://live-manifest.production-public.tubi.io/live/8fa6f1c5-c602-426c-999d-8651180ca7ff/playlist.m3u8" },
 { name: "True History", url: "https://linear-188.frequency.stream/dist/glewedtv/188/hls/master/playlist.m3u8" },
@@ -575,7 +583,7 @@ const channelData = [{ type: "header", name: "D.A.P's entrepreneur & Money" },
 { name: "The Price Is Right: The Barker Era", url: "https://amg00145-buzzr-bigballs-tpir-8min-rokuus-otcre.amagi.tv/playlist/amg00145-buzzr-bigballs-tpir-8min-rokuus/playlist.m3u8" },
 { name: "Supermarket Sweep", url: "https://amg00145-buzzr-bigballs-supermarket-rokuus-iqx8g.amagi.tv/playlist/amg00145-buzzr-bigballs-supermarket-rokuus/playlist.m3u8" },
 { name: "Supermarket Sweep (1080p)", url: "https://pb-zp5s7cka1vjrd.akamaized.net/Supermarket_Sweep.m3u8" },
-{{ name: "Deal or No Deal (1080p)", url: "https://deal-or-no-deal-rakuten.amagi.tv/playlist.m3u8" },
+{ name: "Deal or No Deal (1080p)", url: "https://deal-or-no-deal-rakuten.amagi.tv/playlist.m3u8" },
 { name: "Game Show Central (720p)", url: "https://pb-bunear28tuvaw.akamaized.net/v1/gsn_gameshowchannnel_1/samsungheadend_us/latest/main/hls/playlist.m3u8" },
 { name: "Ninja Warrior (1080p)", url: "https://amg00654-itv-amg00654c27-rakuten-uk-5295.playouts.now.amagi.tv/playlist.m3u8" },
 { type: "header", name: "D.A.P's Music Hall" },
@@ -653,7 +661,9 @@ const channelData = [{ type: "header", name: "D.A.P's entrepreneur & Money" },
 { name: "ABN TV India", url: "https://mediaserver.abnvideos.com/streams/abntvindia.m3u8" },
 { name: "ABN Urdu", url: "https://mediaserver.abnvideos.com/streams/abnurdu.m3u8" },
 { name: "Al-MahdiTV", url: "https://iptv.almahditv.com/almahditv/playlist.m3u8" },
-{ name: "Jewish Life TV", url: "https://a-cdn.klowdtv.com/live3/jltv_720p/playlist.m3u8" }];
+{ name: "Jewish Life TV", url: "https://a-cdn.klowdtv.com/live3/jltv_720p/playlist.m3u8" }
+];
+let currentCategory = "";
 channelData.forEach(item => {
 if (item.type === "header") currentCategory = item.name;
 else channelsWithCategories.push({ ...item, category: currentCategory });
@@ -674,6 +684,7 @@ document.querySelectorAll('.btn').forEach(btn => btn.classList.remove('active'))
 if (activeBtn) {
 activeBtn.classList.add('active');
 activeBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+activeBtn.focus();
 }
 }
 function nav(direction) {
@@ -692,8 +703,55 @@ item.style.display = text.indexOf(filter) > -1 ? "" : "none";
 document.addEventListener('keydown', (e) => {
 if (e.key === "ArrowUp" || e.key === "ArrowLeft") { e.preventDefault(); nav(-1); }
 if (e.key === "ArrowDown" || e.key === "ArrowRight") { e.preventDefault(); nav(1); }
-if (e.key === "Enter") document.activeElement.click();
+if (e.key === "Enter" || e.key === " " || e.key === "OK") { e.preventDefault(); document.activeElement.click(); }
+if (e.key === "Escape" || e.key === "Back") { e.preventDefault(); if (document.activeElement !== document.body) document.activeElement.blur(); }
+if (e.key === "PageUp") { e.preventDefault(); nav(-10); }
+if (e.key === "PageDown") { e.preventDefault(); nav(10); }
+if (e.key === "Home") { e.preventDefault(); playChannel(0); }
+if (e.key === "End") { e.preventDefault(); playChannel(channelsWithCategories.length - 1); }
 });
+
+// Touch swipe support for mobile devices
+let touchStartX = 0;
+let touchStartY = 0;
+const playerWrapper = document.getElementById('player-wrapper');
+const chList = document.getElementById('ch-list');
+
+playerWrapper.addEventListener('touchstart', (e) => {
+touchStartX = e.touches[0].clientX;
+touchStartY = e.touches[0].clientY;
+}, { passive: true });
+
+playerWrapper.addEventListener('touchend', (e) => {
+const touchEndX = e.changedTouches[0].clientX;
+const touchEndY = e.changedTouches[0].clientY;
+const diffX = touchStartX - touchEndX;
+const diffY = touchStartY - touchEndY;
+
+if (Math.abs(diffX) > Math.abs(diffY)) {
+if (Math.abs(diffX) > 50) {
+if (diffX > 0) nav(1);
+else nav(-1);
+}
+}
+}, { passive: true });
+
+// Improved scroll behavior for channel list
+let scrollTimeout;
+chList.addEventListener('scroll', () => {
+clearTimeout(scrollTimeout);
+scrollTimeout = setTimeout(() => {
+// Scroll settled - can add any post-scroll logic here
+}, 150);
+}, { passive: true });
+
+// Auto-focus first channel button on load for keyboard navigation
+setTimeout(() => {
+const firstBtn = document.querySelector('.btn');
+if (firstBtn && !('ontouchstart' in window)) {
+firstBtn.focus();
+}
+}, 500);
 channelData.forEach((item, index) => {
 if (item.type === "header") {
 const h = document.createElement('div'); h.className = 'section-header'; h.innerText = item.name; list.appendChild(h);
@@ -702,6 +760,8 @@ const btn = document.createElement('button'); btn.className = 'btn';
 const flatIdx = channelsWithCategories.findIndex(c => c.name === item.name);
 btn.id = 'channel-' + flatIdx;
 btn.innerText = (flatIdx + 1) + ". " + item.name;
+btn.setAttribute('role', 'option');
+btn.setAttribute('aria-label', item.name);
 btn.onclick = () => playChannel(flatIdx); list.appendChild(btn);
 }
 });
